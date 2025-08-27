@@ -1,6 +1,12 @@
 import pytest
 
-from common import DuplicateAuthCode, NotFoundAuthCode, PsExec, PsExecNotFoundExecutable, RegQueryEsme
+from drova_desktop_keenetic.common.commands import (
+    DuplicateAuthCode,
+    NotFoundAuthCode,
+    PsExec,
+    PsExecNotFoundExecutable,
+    RegQueryEsme,
+)
 
 
 def test_parse_PSExec() -> None:

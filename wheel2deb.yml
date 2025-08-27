@@ -1,0 +1,5 @@
+# change setting for all wheels
+.:
+  maintainer_name: "sergius-dart"
+  maintainer_email: "sergius-dart@yandex.ru"
+  extended_desc: "Drova clear credentials when run desktop"
