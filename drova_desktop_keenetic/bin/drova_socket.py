@@ -13,7 +13,7 @@ from drova_desktop_keenetic.common.contants import (
     WINDOWS_LOGIN,
     WINDOWS_PASSWORD,
 )
-from drova_desktop_keenetic.common.drova_server_binary import DrovaBinaryProtocol
+from drova_desktop_keenetic.common.drova_server_binary import DrovaBinaryProtocol, Socket
 from drova_desktop_keenetic.common.helpers import CheckDesktop, WaitFinishOrAbort
 
 
@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 async def server_accept(reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
     target_reader, target_writer = await asyncio.open_connection(os.environ[WINDOWS_HOST], 7985)
-    drova_pass = DrovaBinaryProtocol((reader, writer), (target_reader, target_writer))
+    drova_pass = DrovaBinaryProtocol(Socket(reader, writer), Socket(target_reader, target_writer))
     if await drova_pass.wait_server_answered():
         async with connect_ssh(
             host=os.environ[WINDOWS_HOST],

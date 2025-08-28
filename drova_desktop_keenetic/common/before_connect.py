@@ -31,7 +31,7 @@ class BeforeConnect:
 
                 self.logger.info(f"start shadow")
                 # start shadow mode
-                result_shadow = await self.client.run(
+                await self.client.run(
                     str(
                         ShadowDefenderCLI(
                             password=os.environ[SHADOW_DEFENDER_PASSWORD],
@@ -40,7 +40,6 @@ class BeforeConnect:
                         )
                     )
                 )
-                logger.info(f"Result shadow {result_shadow.stdout}")
                 await sleep(0.3)
 
                 self.logger.info(f"prepare steam")
