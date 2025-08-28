@@ -1,4 +1,5 @@
-from time import sleep
+import logging
+from asyncio import sleep
 
 from asyncssh import SSHClientConnection
 
@@ -9,8 +10,11 @@ from drova_desktop_keenetic.common.drova import (
     get_latest_session,
 )
 
+logger = logging.getLogger(__name__)
+
 
 class CheckDesktop:
+    logger = logger.getChild("CheckDesktop")
 
     def __init__(self, client: SSHClientConnection):
         self.client = client
@@ -23,7 +27,9 @@ class CheckDesktop:
 
         serveri_id, auth_token = RegQueryEsme.parseAuthCode(stdout=stdout)
 
+        self.logger.info(f"Start read latest session with token {auth_token}")
         session = await get_latest_session(serveri_id, auth_token)
+        self.logger.debug("Session : ", session)
 
         if not session:
             return False
@@ -35,6 +41,8 @@ class CheckDesktop:
 
 
 class WaitFinishOrAbort:
+    logger = logger.getChild("CheckDesktop")
+
     def __init__(self, client: SSHClientConnection):
         self.client = client
 
@@ -52,4 +60,4 @@ class WaitFinishOrAbort:
             # wait close current session
             if session.status in (StatusEnum.ABORTED, StatusEnum.FINISHED):
                 return True
-            sleep(1)
+            await sleep(1)

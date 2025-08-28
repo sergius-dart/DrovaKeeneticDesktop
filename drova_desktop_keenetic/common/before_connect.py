@@ -1,6 +1,6 @@
 import logging
 import os
-from time import sleep
+from asyncio import sleep
 
 from asyncssh import SSHClientConnection
 
@@ -26,35 +26,38 @@ class BeforeConnect:
     async def run(self) -> bool:
 
         self.logger.info("open sftp")
-        async with await self.client.start_sftp_client() as sftp:
+        try:
+            async with self.client.start_sftp_client() as sftp:
 
-            self.logger.info(f"start shadow")
-            # start shadow mode
-            await self.client.run(
-                str(
-                    ShadowDefenderCLI(
-                        password=os.environ[SHADOW_DEFENDER_PASSWORD],
-                        actions=["enter"],
-                        drives=os.environ[SHADOW_DEFENDER_DRIVES],
+                self.logger.info(f"start shadow")
+                # start shadow mode
+                result_shadow = await self.client.run(
+                    str(
+                        ShadowDefenderCLI(
+                            password=os.environ[SHADOW_DEFENDER_PASSWORD],
+                            actions=["enter"],
+                            drives=os.environ[SHADOW_DEFENDER_DRIVES],
+                        )
                     )
                 )
-            )
-            sleep(0.3)
+                logger.info(f"Result shadow {result_shadow.stdout}")
+                await sleep(0.3)
 
-            self.logger.info(f"prepare steam")
-            # prepare steam
-            await self.client.run(str(TaskKill(image="steam.exe")))
-            sleep(0.1)
-            steam = SteamAuthDiscard(sftp)
-            await steam.patch()
-            # client.run(str(PsExec(command=Steam()))) # todo autorestart steam launcher
+                self.logger.info(f"prepare steam")
+                # prepare steam
+                await self.client.run(str(TaskKill(image="steam.exe")))
+                await sleep(0.1)
+                steam = SteamAuthDiscard(sftp)
+                await steam.patch()
+                # client.run(str(PsExec(command=Steam()))) # todo autorestart steam launcher
 
-            self.logger.info("prepare epic")
-            # prepare epic
-            await self.client.run(str(TaskKill(image="EpicGamesLauncher.exe")))
-            sleep(0.1)
-            epic = EpicGamesAuthDiscard(sftp)
-            await epic.patch()
-            # client.run(str(PsExec(command=EpicGamesLauncher()))) # todo autorestart epic launcher
-
+                self.logger.info("prepare epic")
+                # prepare epic
+                await self.client.run(str(TaskKill(image="EpicGamesLauncher.exe")))
+                await sleep(0.1)
+                epic = EpicGamesAuthDiscard(sftp)
+                await epic.patch()
+                # client.run(str(PsExec(command=EpicGamesLauncher()))) # todo autorestart epic launcher
+        except Exception as e:
+            logger.error(e, e.__traceback__)
         return True

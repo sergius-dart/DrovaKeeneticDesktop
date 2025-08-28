@@ -4,6 +4,7 @@ from ipaddress import IPv4Address
 from uuid import UUID
 
 from pydantic import BaseModel
+import aiohttp
 
 URL_SESSIONS = "https://services.drova.io/session-manager/sessions"
 UUID_DESKTOP = UUID("9fd0eb43-b2bb-4ce3-93b8-9df63f209098")
@@ -38,4 +39,11 @@ class SessionsResponse(BaseModel):
 
 
 async def get_latest_session(serveri_id: str, auth_token: str) -> SessionsEntity | None:
-    pass
+    async with aiohttp.ClientSession() as session:
+        async with session.get(
+            URL_SESSIONS, data={"serveri_id": serveri_id}, headers={"X-Auth-Token": auth_token}
+        ) as resp:
+            sessions = SessionsResponse(**await resp.json())
+            if not sessions.sessions:
+                return None
+            return sessions.sessions[0]
