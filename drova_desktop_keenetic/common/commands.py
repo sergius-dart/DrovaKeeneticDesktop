@@ -1,6 +1,6 @@
+import re
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-import re
 from typing import Literal
 
 from mslex import quote
@@ -91,7 +91,7 @@ class EpicGamesLauncher(ICommandBuilder):
 @dataclass
 class ShadowDefenderCLI(ICommandBuilder):
     password: str
-    actions: list[Literal["enter", "exit", "reboot", "commit"]]
+    actions: list[Literal["enter", "exit", "reboot", "commit", "list"]]
     drives: str | None = None
 
     def _build_command(self) -> str:
@@ -110,6 +110,8 @@ class ShadowDefenderCLI(ICommandBuilder):
                 case "commit":
                     assert self.drives
                     command += [f'/commit:"{drive}:\\"' for drive in self.drives.split("")]
+                case "list":
+                    command += [f"/list"]
         command += ["/now"]
         return " ".join(command)
 

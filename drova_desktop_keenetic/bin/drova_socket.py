@@ -2,9 +2,14 @@ import asyncio
 import os
 
 from asyncssh import connect as connect_ssh
+
 from drova_desktop_keenetic.common.after_disconnect import AfterDisconnect
 from drova_desktop_keenetic.common.before_connect import BeforeConnect
-from drova_desktop_keenetic.common.contants import WINDOWS_HOST, WINDOWS_LOGIN, WINDOWS_PASSWORD
+from drova_desktop_keenetic.common.contants import (
+    WINDOWS_HOST,
+    WINDOWS_LOGIN,
+    WINDOWS_PASSWORD,
+)
 from drova_desktop_keenetic.common.helpers import CheckDesktop, WaitFinishOrAbort
 
 
@@ -14,7 +19,10 @@ async def server_accept(reader: asyncio.StreamReader, writer: asyncio.StreamWrit
     pass2 = asyncio.create_task(passthrough_socket(target_reader, writer))
 
     async with connect_ssh(
-        host=os.environ[WINDOWS_HOST], username=os.environ[WINDOWS_LOGIN], password=os.environ[WINDOWS_PASSWORD]
+        host=os.environ[WINDOWS_HOST],
+        username=os.environ[WINDOWS_LOGIN],
+        password=os.environ[WINDOWS_PASSWORD],
+        known_hosts=None,
     ) as conn:
         check_desktop = CheckDesktop(conn)
         is_desktop = await check_desktop.run()

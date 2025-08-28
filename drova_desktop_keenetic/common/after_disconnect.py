@@ -4,8 +4,10 @@ import os
 from asyncssh import SSHClientConnection
 
 from drova_desktop_keenetic.common.commands import ShadowDefenderCLI
-from drova_desktop_keenetic.common.contants import SHADOW_DEFENDER_DRIVES, SHADOW_DEFENDER_PASSWORD
-
+from drova_desktop_keenetic.common.contants import (
+    SHADOW_DEFENDER_DRIVES,
+    SHADOW_DEFENDER_PASSWORD,
+)
 
 logger = logging.getLogger(__name__)
 

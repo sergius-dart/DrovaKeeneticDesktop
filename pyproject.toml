@@ -44,3 +44,6 @@ pythonpath = ["drova_desktop_keenetic"]
 exclude = [
     "dist"
 ]
+
+[tool.isort]
+profile = "black"
