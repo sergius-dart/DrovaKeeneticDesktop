@@ -20,9 +20,6 @@ class BeforeConnect:
     def __init__(self, client: SSHClientConnection):
         self.client = client
 
-    def check_env(self) -> None:
-        self.logger.info("check_env")
-
     async def run(self) -> bool:
 
         self.logger.info("open sftp")
@@ -40,7 +37,7 @@ class BeforeConnect:
                         )
                     )
                 )
-                await sleep(0.3)
+                await sleep(0.4)
 
                 self.logger.info(f"prepare steam")
                 # prepare steam
@@ -57,6 +54,6 @@ class BeforeConnect:
                 epic = EpicGamesAuthDiscard(sftp)
                 await epic.patch()
                 # client.run(str(PsExec(command=EpicGamesLauncher()))) # todo autorestart epic launcher
-        except Exception as e:
-            logger.error(e, e.__traceback__)
+        except Exception:
+            logger.exception("We have problem")
         return True

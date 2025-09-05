@@ -18,7 +18,7 @@ class AfterDisconnect:
     def __init__(self, client: SSHClientConnection):
         self.client = client
 
-    async def run(self) -> int:
+    async def run(self) -> bool:
         self.logger.info("exit from shadow and reboot")
         # exit shadow mode and reboot
         await self.client.run(
@@ -31,4 +31,4 @@ class AfterDisconnect:
             )
         )
 
-        return 0
+        return True

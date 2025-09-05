@@ -1,5 +1,12 @@
-from asyncio import FIRST_COMPLETED, Future, StreamReader, StreamWriter, create_task, get_running_loop, wait
+from asyncio import FIRST_COMPLETED, Future, StreamReader, StreamWriter, create_task, gather, get_running_loop, wait
+from asyncio.exceptions import CancelledError
+import logging
 from typing import NamedTuple
+
+
+logger = logging.getLogger(__name__)
+
+BLOCK_SIZE = 4096
 
 
 class Socket(NamedTuple):
@@ -8,29 +15,42 @@ class Socket(NamedTuple):
 
 
 async def simple_passthrought(reader: StreamReader, writer: StreamWriter):
-    task_read = create_task(reader.read())
-    task_closed = create_task(writer.wait_closed())
-    while await wait((task_read, task_closed), return_when=FIRST_COMPLETED):
-        if task_read.done():
-            writer.write(task_read.result())
-            await writer.drain()
-        if task_closed.done():
+    while True:
+        logger.debug("Wait data in simple ( from client to server )")
+        if readed_bytes := await reader.read(BLOCK_SIZE):
+            logger.debug(f"We readed {hex(readed_bytes)}")
+            try:
+                writer.write(readed_bytes)
+                await writer.drain()
+            except (ConnectionResetError, BrokenPipeError, OSError):
+                logger.debug("We write to closed socket")
+                return
+        else:
+            writer.close()
+            await writer.wait_closed()
+            logger.info("Stop reading")
             return
 
 
 async def server_need_reply(reader: StreamReader, writer: StreamWriter, is_answered: Future):
-    task_read = create_task(reader.read())
-    task_closed = create_task(writer.wait_closed())
     found_answer = False
-    while await wait((task_read, task_closed), return_when=FIRST_COMPLETED):
-        if task_read.done():
-            readed_bytes = task_read.result()
+    while True:
+        logger.debug("Wait data in need_reply ( from server to client )")
+        if readed_bytes := await reader.read(BLOCK_SIZE):
+            logger.debug(f"We readed {hex(readed_bytes)}")
             if b"\x01" in readed_bytes and not found_answer:
                 found_answer = True
                 is_answered.set_result(True)
-            writer.write(readed_bytes)
-            await writer.drain()
-        if task_closed.done():
+            try:
+                writer.write(readed_bytes)
+                await writer.drain()
+            except (ConnectionResetError, BrokenPipeError, OSError):
+                logger.debug("We write to closed socket")
+                return
+        else:
+            writer.close()
+            await writer.wait_closed()
+            logger.info("Stop reading")
             return
 
 
@@ -39,14 +59,30 @@ class DrovaBinaryProtocol:
         self.source_socket = source_socket
         self.target_socket = target_socket
 
-    async def wait_server_answered(self) -> bool:
-        task_passthrought = create_task(simple_passthrought(self.source_socket.reader, self.target_socket.writer))
-        future_is_answered = get_running_loop().create_future()
-        task_wait_answer = create_task(
-            server_need_reply(self.target_socket.reader, self.source_socket.writer, future_is_answered)
+        self.task_passthrought = create_task(simple_passthrought(self.source_socket.reader, self.target_socket.writer))
+        self.future_is_answered = get_running_loop().create_future()
+        self.task_wait_answer = create_task(
+            server_need_reply(self.target_socket.reader, self.source_socket.writer, self.future_is_answered)
         )
 
-        await wait((task_passthrought, future_is_answered, task_wait_answer), return_when=FIRST_COMPLETED)
-        if future_is_answered.done():
+    async def wait_server_answered(self) -> bool:
+        # if some data sending before call
+        if self.future_is_answered.done():
             return True
+
+        try:
+            await gather(self.task_passthrought, self.future_is_answered, self.task_wait_answer, return_exceptions=True)
+            if self.future_is_answered.done():
+                return True
+        except CancelledError:
+            pass
         return False
+
+    async def clear(self):
+        self.source_socket.writer.close()
+        self.target_socket.writer.close()
+        await self.source_socket.writer.wait_closed()
+        await self.target_socket.writer.wait_closed()
+
+        self.task_passthrought.cancel()
+        self.task_wait_answer.cancel()
