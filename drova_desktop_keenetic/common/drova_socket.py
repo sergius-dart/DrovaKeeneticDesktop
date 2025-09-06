@@ -44,8 +44,9 @@ class DrovaSocket:
         logger.debug(f"Accept! to {self.windows_host}:7985")
         logger.debug(reader)
         logger.debug(writer)
-        target_reader, target_writer = await asyncio.open_connection(self.windows_host, 7985)
-        drova_pass = DrovaBinaryProtocol(Socket(reader, writer), Socket(target_reader, target_writer))
+
+        target_socket = await asyncio.open_connection(self.windows_host, 7985)
+        drova_pass = DrovaBinaryProtocol(Socket(reader, writer), Socket(*target_socket))
         logger.info("Wait drova windows-server answer")
         if await drova_pass.wait_server_answered():
             logger.info("Server answered - connect and prepare windows host")

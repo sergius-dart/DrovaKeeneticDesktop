@@ -1,4 +1,4 @@
-from asyncio import FIRST_COMPLETED, Future, StreamReader, StreamWriter, create_task, gather, get_running_loop, wait
+from asyncio import FIRST_COMPLETED, Future, StreamReader, StreamWriter, create_task, gather, get_running_loop, sleep
 from asyncio.exceptions import CancelledError
 import logging
 from typing import NamedTuple
@@ -14,11 +14,10 @@ class Socket(NamedTuple):
     writer: StreamWriter
 
 
-async def simple_passthrought(reader: StreamReader, writer: StreamWriter):
+async def simple_passthrought(reader: StreamReader, writer: StreamWriter) -> None:
     while True:
         logger.debug("Wait data in simple ( from client to server )")
-        if readed_bytes := await reader.read(BLOCK_SIZE):
-            logger.debug(f"We readed {hex(readed_bytes)}")
+        if (readed_bytes := await reader.read(BLOCK_SIZE)) and readed_bytes:
             try:
                 writer.write(readed_bytes)
                 await writer.drain()
@@ -32,12 +31,12 @@ async def simple_passthrought(reader: StreamReader, writer: StreamWriter):
             return
 
 
-async def server_need_reply(reader: StreamReader, writer: StreamWriter, is_answered: Future):
+async def server_need_reply(reader: StreamReader, writer: StreamWriter, is_answered: Future) -> None:
     found_answer = False
     while True:
         logger.debug("Wait data in need_reply ( from server to client )")
-        if readed_bytes := await reader.read(BLOCK_SIZE):
-            logger.debug(f"We readed {hex(readed_bytes)}")
+        if (readed_bytes := await reader.read(BLOCK_SIZE)) and readed_bytes:
+            logger.debug(f"We readed ( from server to client ) {len(readed_bytes)}")
             if b"\x01" in readed_bytes and not found_answer:
                 found_answer = True
                 is_answered.set_result(True)
@@ -45,12 +44,16 @@ async def server_need_reply(reader: StreamReader, writer: StreamWriter, is_answe
                 writer.write(readed_bytes)
                 await writer.drain()
             except (ConnectionResetError, BrokenPipeError, OSError):
+                if not is_answered.done():
+                    is_answered.set_result(False)
                 logger.debug("We write to closed socket")
                 return
         else:
             writer.close()
             await writer.wait_closed()
             logger.info("Stop reading")
+            if not is_answered.done():
+                is_answered.set_result(False)
             return
 
 
@@ -59,21 +62,22 @@ class DrovaBinaryProtocol:
         self.source_socket = source_socket
         self.target_socket = target_socket
 
-        self.task_passthrought = create_task(simple_passthrought(self.source_socket.reader, self.target_socket.writer))
+        self.task_passthrought = create_task(
+            simple_passthrought(self.source_socket.reader, self.target_socket.writer), name=simple_passthrought.__name__
+        )
         self.future_is_answered = get_running_loop().create_future()
         self.task_wait_answer = create_task(
-            server_need_reply(self.target_socket.reader, self.source_socket.writer, self.future_is_answered)
+            server_need_reply(self.target_socket.reader, self.source_socket.writer, self.future_is_answered),
+            name=server_need_reply.__name__,
         )
 
     async def wait_server_answered(self) -> bool:
         # if some data sending before call
         if self.future_is_answered.done():
-            return True
-
+            return self.future_is_answered.result()
         try:
-            await gather(self.task_passthrought, self.future_is_answered, self.task_wait_answer, return_exceptions=True)
-            if self.future_is_answered.done():
-                return True
+            await self.future_is_answered
+            return self.future_is_answered.result()
         except CancelledError:
             pass
         return False

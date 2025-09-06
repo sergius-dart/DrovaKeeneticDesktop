@@ -8,7 +8,7 @@ import asyncssh
 
 from drova_desktop_keenetic.common.after_disconnect import AfterDisconnect
 from drova_desktop_keenetic.common.before_connect import BeforeConnect
-from drova_desktop_keenetic.common.contants import DROVA_SOCKET_LISTEN
+from drova_desktop_keenetic.common.drova_server_binary import BLOCK_SIZE
 from drova_desktop_keenetic.common.drova_socket import DrovaSocket
 from drova_desktop_keenetic.common.helpers import CheckDesktop, WaitFinishOrAbort
 
@@ -21,7 +21,7 @@ basicConfig(level=DEBUG)
 async def prepare_server():
     async def handler(reader: asyncio.StreamReader, writer: asyncio.StreamWriter) -> None:
         logger.info("Fake-server! Read request")
-        await reader.read()
+        await reader.read(BLOCK_SIZE)
         await asyncio.sleep(1)
         logger.info("Write answer")
         writer.write(b"\x01")
@@ -45,8 +45,8 @@ async def test_full(prepare_server):
     @mock.patch.object(WaitFinishOrAbort, WaitFinishOrAbort.run.__name__)
     @mock.patch.object(BeforeConnect, BeforeConnect.run.__name__)
     @mock.patch.object(AfterDisconnect, AfterDisconnect.run.__name__)
-    @mock.patch("asyncssh.connect")
-    async def checkDesktopRun(self) -> bool:
+    @mock.patch.object(asyncssh, asyncssh.connect.__name__)
+    async def _(self) -> bool:
         return True
 
     drova_socket = DrovaSocket(7990, windows_host="127.0.0.1")
@@ -54,12 +54,16 @@ async def test_full(prepare_server):
     logger.info("Drova is served")
     await asyncio.sleep(0.1)
     reader, writer = await asyncio.open_connection(host="127.0.0.1", port=7990)
+    logger.debug("Opened connection : ")
+    logger.debug(reader)
+    logger.debug(writer)
+
     await asyncio.sleep(0.1)
     logger.info("Write data!")
     writer.write(b"Hello world!")
     await writer.drain()
     logger.info("Wait data!")
-    await reader.read()
+    await reader.read(BLOCK_SIZE)
     logger.info("Clear!")
     writer.close()
     await writer.wait_closed()
