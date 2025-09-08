@@ -75,10 +75,13 @@ class DrovaSocket:
         else:
             await drova_pass.clear()
 
-    async def serve(self):
+    async def serve(self, wait_forever=False):
         self.server = await asyncio.start_server(self.server_accept, "0.0.0.0", self.drova_socket_listen, limit=1)
 
         addrs = ", ".join(str(sock.getsockname()) for sock in self.server.sockets)
         logger.info(f"Serving on {addrs}")
 
-        await self.server.start_serving()
+        if not wait_forever:
+            await self.server.start_serving()
+        else:
+            await self.server.serve_forever()

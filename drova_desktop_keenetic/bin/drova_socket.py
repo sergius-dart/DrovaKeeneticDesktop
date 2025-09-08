@@ -8,7 +8,7 @@ basicConfig(level=DEBUG)
 
 
 def run_async_main():
-    asyncio.run(DrovaSocket().serve())
+    asyncio.run(DrovaSocket().serve(True))
 
 
 if __name__ == "__main__":
