@@ -4,12 +4,11 @@ import logging
 import pytest
 import pytest_asyncio
 from unittest import mock
-import asyncssh
 
 from drova_desktop_keenetic.common.after_disconnect import AfterDisconnect
 from drova_desktop_keenetic.common.before_connect import BeforeConnect
 from drova_desktop_keenetic.common.drova_server_binary import BLOCK_SIZE
-from drova_desktop_keenetic.common.drova_socket import DrovaSocket
+from drova_desktop_keenetic.common.drova_socket import DrovaSocket, connect_ssh
 from drova_desktop_keenetic.common.helpers import CheckDesktop, WaitFinishOrAbort
 
 
@@ -45,7 +44,7 @@ async def test_full(prepare_server):
     @mock.patch.object(WaitFinishOrAbort, WaitFinishOrAbort.run.__name__)
     @mock.patch.object(BeforeConnect, BeforeConnect.run.__name__)
     @mock.patch.object(AfterDisconnect, AfterDisconnect.run.__name__)
-    @mock.patch.object(asyncssh, asyncssh.connect.__name__)
+    @mock.patch('drova_desktop_keenetic.common.drova_socket.connect_ssh')
     async def _(self) -> bool:
         return True
 
