@@ -9,7 +9,7 @@
 + проброс всех портов кроме 7985 на таргете средствами роутера
 + Установленный openssh-server на Windows и добавленный в автозагрузку
 
-### Подготовка
+## Подготовка
 
 Для того чтобы начать, склонируйте данный репозиторий на роутер.
 
@@ -57,11 +57,11 @@ poetry run python drova_validate
 
 Если написало `Ok!` - значит вы выставили .env верно и можно переходить к следующей части
 
-### Автозапуск
+## Автозапуск
 
 entware ( debian на keenetic ) - поддерживает только upstart - для этого есть скрипт `init.d/drova_socket` - мы его никуда перекладывать не будем - нам надо создать сервис, и вызывать его. 
 
-#### Entware(debian 13)
+### Entware(debian 13)
 
 Если у вас не такой сетап - читайте и думайте, из коробки тогда не взлетит. Давайте создадим сервис `drova_socket.i9_3080ti`
 
@@ -98,13 +98,13 @@ ENV_LOCATION=/opt/drova-desktop/NAME.env poetry run drova_validate
 
 Удачи!
 
-#### Systemd 
+### Systemd 
 
 Для работы с systemd ( если вы не на роутере а на отдельной тачке или виртуалке, где полноценная debian с systemd )
 
 Делаем ссылку на сервис
 ```bash
-ln -s /opt/drova-desktop/drov_socket@.service /etc/systemd/system/drova_socket@.service
+ln -s /opt/drova-desktop/systemd/drova_socket@.service /etc/systemd/system/drova_socket@.service
 ```
 
 Перезагружаем демоны systemd
