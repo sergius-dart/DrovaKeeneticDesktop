@@ -5,12 +5,16 @@ import pytest
 import pytest_asyncio
 from unittest import mock
 
-from drova_desktop_keenetic.common.after_disconnect import AfterDisconnect
-from drova_desktop_keenetic.common.before_connect import BeforeConnect
 from drova_desktop_keenetic.common.drova_server_binary import BLOCK_SIZE
-from drova_desktop_keenetic.common.drova_socket import DrovaSocket, connect_ssh
-from drova_desktop_keenetic.common.helpers import CheckDesktop, WaitFinishOrAbort
+from drova_desktop_keenetic.common.drova_socket import DrovaSocket
 
+CHECK_DESKTOP_RUN = "drova_desktop_keenetic.common.helpers.CheckDesktop.run"
+WAIT_FINISH_OR_ABORT_RUN = "drova_desktop_keenetic.common.helpers.WaitFinishOrAbort.run"
+
+BEFORE_CONNECT_RUN = "drova_desktop_keenetic.common.before_connect.BeforeConnect.run"
+AFTER_DISCONNECT_RUN = "drova_desktop_keenetic.common.after_disconnect.AfterDisconnect.run"
+
+DROVA_SOCKET_CONNECT_SSH = "drova_desktop_keenetic.common.drova_socket.connect_ssh"
 
 logger = logging.getLogger(__name__)
 basicConfig(level=DEBUG)
@@ -38,13 +42,13 @@ async def prepare_server():
 
 
 @pytest.mark.asyncio
-async def test_full(prepare_server):
+async def test_full(prepare_server, mocker):
 
-    @mock.patch.object(CheckDesktop, CheckDesktop.run.__name__)
-    @mock.patch.object(WaitFinishOrAbort, WaitFinishOrAbort.run.__name__)
-    @mock.patch.object(BeforeConnect, BeforeConnect.run.__name__)
-    @mock.patch.object(AfterDisconnect, AfterDisconnect.run.__name__)
-    @mock.patch('drova_desktop_keenetic.common.drova_socket.connect_ssh')
+    @mocker.patch(CHECK_DESKTOP_RUN)
+    @mocker.patch(WAIT_FINISH_OR_ABORT_RUN)
+    @mocker.patch(BEFORE_CONNECT_RUN)
+    @mocker.patch(AFTER_DISCONNECT_RUN)
+    @mocker.patch(DROVA_SOCKET_CONNECT_SSH)
     async def _(self) -> bool:
         return True
 
@@ -66,5 +70,25 @@ async def test_full(prepare_server):
     logger.info("Clear!")
     writer.close()
     await writer.wait_closed()
+
+    await drova_socket.stop()
+
+
+@pytest.mark.asyncio
+async def test_server_run_as_desktop(prepare_server, mocker):
+    @mocker.patch(CHECK_DESKTOP_RUN)
+    @mocker.patch(BEFORE_CONNECT_RUN)
+    @mocker.patch(AFTER_DISCONNECT_RUN)
+    @mocker.patch(DROVA_SOCKET_CONNECT_SSH)
+    async def _(self) -> bool:
+        return True
+
+    @mocker.patch(WAIT_FINISH_OR_ABORT_RUN)
+    async def _(self) -> bool:
+        await asyncio.sleep(0.5)
+        return True
+
+    drova_socket = DrovaSocket(7990, windows_host="127.0.0.1")
+    await drova_socket.serve()
 
     await drova_socket.stop()
