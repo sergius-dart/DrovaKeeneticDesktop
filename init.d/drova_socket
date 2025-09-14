@@ -44,7 +44,7 @@ case "$1" in
         start-stop-daemon --start --quiet --background --chdir ${DROVA_INSTALL_LOCATION} --pidfile $DROVA_PID_FILE --exec `which poetry` -- run drova_socket
         ;;
     status)
-        status_of_proc -p $RSYNC_PID_FILE poerty run drova_socket
+        status_of_proc -p $DROVA_PID_FILE poerty run drova_socket
         exit $? # notreached due to set -e
         ;;
     *)
