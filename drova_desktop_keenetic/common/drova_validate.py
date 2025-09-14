@@ -1,6 +1,6 @@
 import os
-from aiofiles.tempfile import NamedTemporaryFile
 
+from aiofiles.tempfile import NamedTemporaryFile
 from asyncssh import SSHClientConnectionOptions
 from asyncssh import connect as connect_ssh
 

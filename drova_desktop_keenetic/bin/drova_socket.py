@@ -3,7 +3,6 @@ from logging import DEBUG, basicConfig
 
 from drova_desktop_keenetic.common.drova_socket import DrovaSocket
 
-
 basicConfig(level=DEBUG)
 
 

@@ -3,8 +3,8 @@ from enum import StrEnum
 from ipaddress import IPv4Address
 from uuid import UUID
 
-from pydantic import BaseModel
 import aiohttp
+from pydantic import BaseModel
 
 URL_SESSIONS = "https://services.drova.io/session-manager/sessions"
 UUID_DESKTOP = UUID("9fd0eb43-b2bb-4ce3-93b8-9df63f209098")

@@ -29,7 +29,7 @@ class CheckDesktop:
 
         self.logger.info(f"Start read latest session with token {auth_token}")
         session = await get_latest_session(serveri_id, auth_token)
-        self.logger.debug("Session : ", session)
+        self.logger.debug(f"Session : {session}")
 
         if not session:
             return False

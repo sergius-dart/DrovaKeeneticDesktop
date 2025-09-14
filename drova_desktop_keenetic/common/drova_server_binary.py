@@ -1,8 +1,16 @@
-from asyncio import FIRST_COMPLETED, Future, StreamReader, StreamWriter, create_task, gather, get_running_loop, sleep
-from asyncio.exceptions import CancelledError
 import logging
+from asyncio import (
+    FIRST_COMPLETED,
+    Future,
+    StreamReader,
+    StreamWriter,
+    create_task,
+    gather,
+    get_running_loop,
+    sleep,
+)
+from asyncio.exceptions import CancelledError
 from typing import NamedTuple
-
 
 logger = logging.getLogger(__name__)
 

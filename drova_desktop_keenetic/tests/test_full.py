@@ -1,9 +1,10 @@
 import asyncio
-from logging import DEBUG, basicConfig
 import logging
+from logging import DEBUG, basicConfig
+from unittest import mock
+
 import pytest
 import pytest_asyncio
-from unittest import mock
 
 from drova_desktop_keenetic.common.drova_server_binary import BLOCK_SIZE
 from drova_desktop_keenetic.common.drova_socket import DrovaSocket

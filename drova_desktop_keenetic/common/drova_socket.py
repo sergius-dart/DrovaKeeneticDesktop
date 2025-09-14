@@ -1,7 +1,7 @@
 import asyncio
-from logging import DEBUG, basicConfig
 import logging
 import os
+from logging import DEBUG, basicConfig
 
 from asyncssh import connect as connect_ssh
 
@@ -13,9 +13,11 @@ from drova_desktop_keenetic.common.contants import (
     WINDOWS_LOGIN,
     WINDOWS_PASSWORD,
 )
-from drova_desktop_keenetic.common.drova_server_binary import DrovaBinaryProtocol, Socket
+from drova_desktop_keenetic.common.drova_server_binary import (
+    DrovaBinaryProtocol,
+    Socket,
+)
 from drova_desktop_keenetic.common.helpers import CheckDesktop, WaitFinishOrAbort
-
 
 logger = logging.getLogger(__name__)
 
