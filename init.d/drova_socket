@@ -34,7 +34,7 @@ DROVA_PID_FILE=/var/run/drova-desktop-${DROVA_SOCKET_LISTEN}.pid
 
 start_drova_socket()
 {
-    if netstat -an46lp | grep ${DROVA_SOCKET_LISTEN} ; then
+    if netstat -an46lp | grep 0.0.0.0:${DROVA_SOCKET_LISTEN} ; then
         echo "Is running - exited - use restart"
         exit 1
     fi
