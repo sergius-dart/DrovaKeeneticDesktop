@@ -20,9 +20,9 @@ class IPatch(ABC):
 
     async def patch(self):
         async with NamedTemporaryFile("ab") as temp_file:
-            async with self.sftp.get(str(self.remote_file_location), temp_file.name) as f:
-                self._patch(f, Path(temp_file.name))
-                await self.sftp.put(temp_file.name, str(self.remote_file_location))
+            f = await self.sftp.get(str(self.remote_file_location), temp_file.name):
+            self._patch(f, Path(temp_file.name))
+            await self.sftp.put(temp_file.name, str(self.remote_file_location))
 
 
 class EpicGamesAuthDiscard(IPatch):

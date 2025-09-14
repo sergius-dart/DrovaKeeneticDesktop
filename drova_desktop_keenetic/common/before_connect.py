@@ -37,12 +37,12 @@ class BeforeConnect:
                         )
                     )
                 )
-                await sleep(0.4)
+                await sleep(0.8)
 
                 self.logger.info(f"prepare steam")
                 # prepare steam
                 await self.client.run(str(TaskKill(image="steam.exe")))
-                await sleep(0.1)
+                await sleep(0.2)
                 steam = SteamAuthDiscard(sftp)
                 await steam.patch()
                 # client.run(str(PsExec(command=Steam()))) # todo autorestart steam launcher
@@ -50,7 +50,7 @@ class BeforeConnect:
                 self.logger.info("prepare epic")
                 # prepare epic
                 await self.client.run(str(TaskKill(image="EpicGamesLauncher.exe")))
-                await sleep(0.1)
+                await sleep(0.2)
                 epic = EpicGamesAuthDiscard(sftp)
                 await epic.patch()
                 # client.run(str(PsExec(command=EpicGamesLauncher()))) # todo autorestart epic launcher
