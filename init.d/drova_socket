@@ -34,14 +34,14 @@ DROVA_PID_FILE=/var/run/drova-desktop-${DROVA_SOCKET_LISTEN}.pid
 
 case "$1" in
     start)
-        ENV_LOCATION=${ENV_LOCATION} start-stop-daemon --start --quiet --background --chdir ${DROVA_INSTALL_LOCATION} -make-pidfile --pidfile $DROVA_PID_FILE --exec `which poetry` -- run drova_socket
+        ENV_LOCATION=${ENV_LOCATION} start-stop-daemon --start --quiet --background --chdir ${DROVA_INSTALL_LOCATION} --make-pidfile --pidfile $DROVA_PID_FILE --exec `which poetry` -- run drova_socket
         ;;
     stop)
         start-stop-daemon --stop --quiet --oknodo --retry 30 --pidfile $DROVA_PID_FILE
         ;;
     restart)
         start-stop-daemon --stop --quiet --oknodo --retry 30 --pidfile $DROVA_PID_FILE
-        ENV_LOCATION=${ENV_LOCATION} start-stop-daemon --start --quiet --background --chdir ${DROVA_INSTALL_LOCATION} -make-pidfile --pidfile $DROVA_PID_FILE --exec `which poetry` -- run drova_socket
+        ENV_LOCATION=${ENV_LOCATION} start-stop-daemon --start --quiet --background --chdir ${DROVA_INSTALL_LOCATION} --make-pidfile --pidfile $DROVA_PID_FILE --exec `which poetry` -- run drova_socket
         ;;
     status)
         status_of_proc -p $DROVA_PID_FILE poerty run drova_socket
