@@ -206,3 +206,5 @@ __marimo__/
 downloaded/*
 
 deploy.sh
+
+*.env
