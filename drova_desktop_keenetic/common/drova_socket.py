@@ -52,7 +52,7 @@ class DrovaSocket:
         logger.info("Wait drova windows-server answer")
         if await drova_pass.wait_server_answered():
             logger.info("Server answered - connect and prepare windows host")
-            self._run_server_acked()
+            await self._run_server_acked()
         else:
             await drova_pass.clear()
 
