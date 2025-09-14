@@ -29,7 +29,7 @@ class IPatch(ABC):
 class EpicGamesAuthDiscard(IPatch):
     logger = logger.getChild("EpicGamesAuthDiscard")
 
-    remote_file_location = PureWindowsPath(r"AppData\Local\EpicGamesLauncher\Saved\Config\Windows\GameUserSetting.ini")
+    remote_file_location = PureWindowsPath(r"AppData\Local\EpicGamesLauncher\Saved\Config\Windows\GameUserSettings.ini")
 
     async def _patch(self, file: Path):
         config = ConfigParser()
