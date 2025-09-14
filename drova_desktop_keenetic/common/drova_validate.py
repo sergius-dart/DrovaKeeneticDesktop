@@ -30,6 +30,7 @@ async def validate_creds():
         username=os.environ[WINDOWS_LOGIN],
         password=os.environ[WINDOWS_PASSWORD],
         known_hosts=None,
+        encoding="windows-1251",
     ) as conn:
         print("Windows access complete!")
         result_defender = await conn.run(str(ShadowDefenderCLI(os.environ[SHADOW_DEFENDER_PASSWORD], "list")))

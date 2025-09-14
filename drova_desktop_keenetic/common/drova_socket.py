@@ -62,6 +62,7 @@ class DrovaSocket:
             username=self.windows_login,
             password=self.windows_password,
             known_hosts=None,
+            encoding="windows-1251",
         ) as conn:
             check_desktop = CheckDesktop(conn)
             is_desktop = await check_desktop.run()
@@ -86,6 +87,7 @@ class DrovaSocket:
             username=self.windows_login,
             password=self.windows_password,
             known_hosts=None,
+            encoding="windows-1251",
         ) as conn:
             check_desktop = CheckDesktop(conn)
             is_desktop = await check_desktop.run()
