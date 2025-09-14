@@ -19,7 +19,7 @@ if [ -z ${DROVA_INSTALL_LOCATION} ]; then
     DROVA_INSTALL_LOCATION="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && cd .. &&  pwd )"
 fi
 
-if [ -z ${ENV_LOCATION}]; then
+if [ -z ${ENV_LOCATION} ]; then
     ENV_LOCATION=${DROVA_INSTALL_LOCATION}/.env
 fi
 
