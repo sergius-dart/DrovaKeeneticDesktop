@@ -32,9 +32,9 @@ class EpicGamesAuthDiscard(IPatch):
     remote_file_location = PureWindowsPath(r"AppData\Local\EpicGamesLauncher\Saved\Config\Windows\GameUserSettings.ini")
 
     async def _patch(self, file: Path):
-        config = ConfigParser()
+        config = ConfigParser(strict=False)
         self.logger.info("read GameUserSettings.ini")
-        config.read_file(str(file))
+        config.read(file, encoding="UTF-8")
 
         config.remove_section("RememberMe")
         config.remove_section("Offline")
