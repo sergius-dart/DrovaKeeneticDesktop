@@ -1,5 +1,6 @@
 import logging
 import os
+from asyncio import sleep
 
 from asyncssh import SSHClientConnection
 
@@ -20,6 +21,7 @@ class AfterDisconnect:
 
     async def run(self) -> bool:
         self.logger.info("exit from shadow and reboot")
+        await sleep(1)
         # exit shadow mode and reboot
         await self.client.run(
             str(
