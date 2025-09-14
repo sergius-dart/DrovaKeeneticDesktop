@@ -33,10 +33,11 @@ class EpicGamesAuthDiscard(IPatch):
 
     async def _patch(self, file: Path):
         config = ConfigParser()
-        self.logger.info("read Game.ini")
-        config.read_file(str(file), "Game.ini")
+        self.logger.info("read GameUserSettings.ini")
+        config.read_file(str(file))
 
         config.remove_section("RememberMe")
+        config.remove_section("Offline")
         self.logger.info("Write without auth section")
         with open(file, "w") as f:
             config.write(f)
