@@ -32,22 +32,31 @@ fi
 
 DROVA_PID_FILE=/var/run/drova-desktop-${DROVA_SOCKET_LISTEN}.pid
 
+start_drova_socket()
+{
+    if netstat -an46lp | grep ${DROVA_SOCKET_LISTEN} ; then
+        echo "Is running - exited - use restart"
+        exit 1
+    fi
+    ENV_LOCATION=${ENV_LOCATION} start-stop-daemon --start --quiet --background --chdir ${DROVA_INSTALL_LOCATION} --make-pidfile --pidfile $DROVA_PID_FILE --exec `which poetry` -- run drova_socket
+}
+
 case "$1" in
     start)
-        ENV_LOCATION=${ENV_LOCATION} start-stop-daemon --start --quiet --background --chdir ${DROVA_INSTALL_LOCATION} --make-pidfile --pidfile $DROVA_PID_FILE --exec `which poetry` -- run drova_socket
+        start_drova_socket
         ;;
     stop)
         start-stop-daemon --stop --quiet --oknodo --retry 30 --pidfile $DROVA_PID_FILE
         ;;
     restart)
         start-stop-daemon --stop --quiet --oknodo --retry 30 --pidfile $DROVA_PID_FILE
-        ENV_LOCATION=${ENV_LOCATION} start-stop-daemon --start --quiet --background --chdir ${DROVA_INSTALL_LOCATION} --make-pidfile --pidfile $DROVA_PID_FILE --exec `which poetry` -- run drova_socket
+        start_drova_socket
         ;;
     status)
         status_of_proc -p $DROVA_PID_FILE poerty run drova_socket
         exit $? # notreached due to set -e
         ;;
     *)
-        echo "Usage: /etc/init.d/rsync {start|stop|restart|status}"
+        echo "Usage: /etc/init.d/drova_socket {start|stop|restart|status}"
         exit 1
 esac
