@@ -8,17 +8,19 @@ from asyncssh import SFTPClient
 
 logger = logging.getLogger(__name__)
 
-
 class IPatch(ABC):
+    NAME: str
+    TASKKILL_IMAGE: str
+
     remote_file_location: PureWindowsPath
 
     def __init__(self, sftp: SFTPClient):
         self.sftp = sftp
 
     @abstractmethod
-    async def _patch(self, file: Path): ...
+    async def _patch(self, file: Path) -> None: ...
 
-    async def patch(self):
+    async def patch(self) -> None:
         async with NamedTemporaryFile("ab") as temp_file:
             temp_file.close()
             await self.sftp.get(str(self.remote_file_location), temp_file.name)
@@ -28,10 +30,12 @@ class IPatch(ABC):
 
 class EpicGamesAuthDiscard(IPatch):
     logger = logger.getChild("EpicGamesAuthDiscard")
+    NAME = "epicgames"
+    TASKKILL_IMAGE = "EpicGamesLauncher.exe"
 
     remote_file_location = PureWindowsPath(r"AppData\Local\EpicGamesLauncher\Saved\Config\Windows\GameUserSettings.ini")
 
-    async def _patch(self, file: Path):
+    async def _patch(self, file: Path) -> None:
         config = ConfigParser(strict=False)
         self.logger.info("read GameUserSettings.ini")
         config.read(file, encoding="UTF-8")
@@ -45,10 +49,12 @@ class EpicGamesAuthDiscard(IPatch):
 
 class SteamAuthDiscard(IPatch):
     logger = logger.getChild("SteamAuthDiscard")
+    NAME = "steam"
+    TASKKILL_IMAGE = "steam.exe"
     # remote_file_location = PureWindowsPath(r'c:\Program Files (x86)\Steam\config\config.vdf')
     remote_file_location = PureWindowsPath(r"c:\Program Files (x86)\Steam\config\loginusers.vdf")
 
-    async def _patch(self, file: Path):
+    async def _patch(self, file: Path) -> None:
         with open(file, mode="w") as f:
             f.write(
                 """"users"
@@ -63,3 +69,25 @@ class SteamAuthDiscard(IPatch):
         # r.sub('\1\3', content_config)
         # self.logger.info('Write without any authentificated')
         # file.write(content_config.encode())
+
+
+class UbisoftAuthDiscard(IPatch):
+    logger = logger.getChild("UbisoftAuthDiscard")
+    NAME = "ubisoft"
+    TASKKILL_IMAGE = "upc.exe"
+
+    to_remove = (
+        r"AppData\Local\Ubisoft Game Launcher\ConnectSecureStorage.dat",
+        r"AppData\Local\Ubisoft Game Launcher\user.dat",
+    )
+
+    def _patch(self, _: Path) -> None:
+        return None
+
+    async def patch(self) -> None:
+        for file in self.to_remove:
+            if await self.sftp.exists(file):
+                self.logger.info('Remove file {file}')
+                await self.sftp.remove(PureWindowsPath(file))
+
+ALL_PATCHES = (EpicGamesAuthDiscard, SteamAuthDiscard, UbisoftAuthDiscard)

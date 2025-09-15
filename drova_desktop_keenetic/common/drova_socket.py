@@ -66,7 +66,7 @@ class DrovaSocket:
         ) as conn:
             check_desktop = CheckDesktop(conn)
             is_desktop = await check_desktop.run()
-            logger.info("Session is Desktop!")
+            logger.info(f"Session is Desktop! -> {is_desktop}")
 
             if is_desktop:
                 logger.info("Start beforeConnect")

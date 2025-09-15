@@ -9,7 +9,7 @@ from drova_desktop_keenetic.common.contants import (
     SHADOW_DEFENDER_DRIVES,
     SHADOW_DEFENDER_PASSWORD,
 )
-from drova_desktop_keenetic.common.patch import EpicGamesAuthDiscard, SteamAuthDiscard
+from drova_desktop_keenetic.common.patch import ALL_PATCHES
 
 logger = logging.getLogger(__name__)
 
@@ -39,21 +39,13 @@ class BeforeConnect:
                 )
                 await sleep(0.8)
 
-                self.logger.info(f"prepare steam")
-                # prepare steam
-                await self.client.run(str(TaskKill(image="steam.exe")))
-                await sleep(0.2)
-                steam = SteamAuthDiscard(sftp)
-                await steam.patch()
-                # client.run(str(PsExec(command=Steam()))) # todo autorestart steam launcher
+                for path in ALL_PATCHES:
+                    self.logger.info(f"prepare {path.NAME}")
+                    await self.client.run(str(TaskKill(image=path.TASKKILL_IMAGE)))
+                    await sleep(0.2)
+                    pather = path(sftp)
+                    await pather.patch()
 
-                self.logger.info("prepare epic")
-                # prepare epic
-                await self.client.run(str(TaskKill(image="EpicGamesLauncher.exe")))
-                await sleep(0.2)
-                epic = EpicGamesAuthDiscard(sftp)
-                await epic.patch()
-                # client.run(str(PsExec(command=EpicGamesLauncher()))) # todo autorestart epic launcher
         except Exception:
             logger.exception("We have problem")
         return True
