@@ -8,6 +8,7 @@ from asyncssh import SFTPClient
 
 logger = logging.getLogger(__name__)
 
+
 class IPatch(ABC):
     NAME: str
     TASKKILL_IMAGE: str
@@ -87,7 +88,25 @@ class UbisoftAuthDiscard(IPatch):
     async def patch(self) -> None:
         for file in self.to_remove:
             if await self.sftp.exists(file):
-                self.logger.info('Remove file {file}')
+                self.logger.info("Remove file {file}")
                 await self.sftp.remove(PureWindowsPath(file))
 
-ALL_PATCHES = (EpicGamesAuthDiscard, SteamAuthDiscard, UbisoftAuthDiscard)
+
+class WargamingAuthDiscard(IPatch):
+    logger = logger.getChild("WargamingAuthDiscard")
+    NAME = "wargaming"
+    TASKKILL_IMAGE = "wgc.exe"
+
+    to_remove = (r"AppData\Roaming\Wargaming.net\GameCenter\user_info.xml",)
+
+    def _patch(self, _: Path) -> None:
+        return None
+
+    async def patch(self) -> None:
+        for file in self.to_remove:
+            if await self.sftp.exists(file):
+                self.logger.info("Remove file {file}")
+                await self.sftp.remove(PureWindowsPath(file))
+
+
+ALL_PATCHES = (EpicGamesAuthDiscard, SteamAuthDiscard, UbisoftAuthDiscard, WargamingAuthDiscard)
