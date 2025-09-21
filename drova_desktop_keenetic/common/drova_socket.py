@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 class DrovaSocket:
     def __init__(
         self,
-        drova_socket_listen: int = int(os.environ[DROVA_SOCKET_LISTEN]),
+        drova_socket_listen: int = int(os.environ[DROVA_SOCKET_LISTEN] if DROVA_SOCKET_LISTEN in os.environ else 0),
         windows_host: str = os.environ[WINDOWS_HOST],
         windows_login: str = os.environ[WINDOWS_LOGIN],
         windows_password: str = os.environ[WINDOWS_PASSWORD],

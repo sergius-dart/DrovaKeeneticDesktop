@@ -1,7 +1,6 @@
 import asyncio
 import logging
 from logging import DEBUG, basicConfig
-from unittest import mock
 
 import pytest
 import pytest_asyncio
@@ -43,7 +42,7 @@ async def prepare_server():
 
 
 @pytest.mark.asyncio
-async def test_full(prepare_server, mocker):
+async def test_socket_full(prepare_server, mocker):
 
     @mocker.patch(CHECK_DESKTOP_RUN)
     @mocker.patch(WAIT_FINISH_OR_ABORT_RUN)
@@ -76,7 +75,7 @@ async def test_full(prepare_server, mocker):
 
 
 @pytest.mark.asyncio
-async def test_server_run_as_desktop(prepare_server, mocker):
+async def test_socket_server_run_as_desktop(prepare_server, mocker):
     @mocker.patch(CHECK_DESKTOP_RUN)
     @mocker.patch(BEFORE_CONNECT_RUN)
     @mocker.patch(AFTER_DISCONNECT_RUN)

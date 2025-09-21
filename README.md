@@ -4,10 +4,11 @@
 
 Нам понадобятся: 
 + ShadowDefender ( активированный и защищенный паролем)
-+ Роутер, прошитый OpenWrt или Debian( чтобы ловить подключение и исполнять команды ) с python 3.12
-+ установленный на роутере socat
-+ проброс всех портов кроме 7985 на таргете средствами роутера
++ Роутер, прошитый OpenWrt или Debian( чтобы ловить подключение и исполнять команды ) с python 3.11
 + Установленный openssh-server на Windows и добавленный в автозагрузку
+
+Никакие сетевые настройки создавать ненадо - надо установить либо на свободную физическую linux машину или создать виртуалку, которая будет следить за состоянием. 
+Управление windows идет по SSH - так что это обязательно к установке. 
 
 ## Подготовка
 
@@ -37,8 +38,6 @@ poetry install
 После этого надо настроить env переменные. Выполните команду `cp .env.example .env` и редактируйте `.env` файл - там находятся настройки для скриптов, давайте их рассмотрим. 
 
 ```bash
-DROVA_SOCKET_LISTEN=7985 # тот сокет, который мы будем слушать - на который будут приходить соединения от клиентов
-
 WINDOWS_HOST=192.168.0.10 # ip адрес вашей тачки, на которой вы хотите развернуть Desktop
 WINDOWS_LOGIN=Administrator # ваш локальный администратор - который должен быть залогинен и под кем будет заходить клиент
 WINDOWS_PASSWORD=VeryStrongPassword # пароль от этого пользователя
@@ -59,7 +58,7 @@ poetry run python drova_validate
 
 ## Автозапуск
 
-entware ( debian на keenetic ) - поддерживает только upstart - для этого есть скрипт `init.d/drova_socket` - мы его никуда перекладывать не будем - нам надо создать сервис, и вызывать его. 
+entware ( debian на keenetic ) - поддерживает только upstart - для этого есть скрипт `init.d/drova_poll` - мы его никуда перекладывать не будем - нам надо создать сервис, и вызывать его. 
 
 ### Entware(debian 13)
 
@@ -77,7 +76,7 @@ chmod +x /etc/init.d/drova_socket.i9_3080ti
 
 ENV_LOCATION=/opt/drova-desktop/NAME.env
 
-. /opt/drova-desktop/init.d/drova_socket "$@"
+. /opt/drova-desktop/init.d/drova_poll "$@"
 ```
 
 `ENV_LOCATION` - здесь находится ваш файл конфигурации, вместо NAME можно использовать то что вам удобно, но это должен быть путь до ваших настроек. Если у вас 1 компьютер, то можете NAME не указывать и тогда просто прописать `ENV_LOCATION=/opt/drova-desktop/.env` - по дефолту. Или ваще ничего не указывать. Тоже будет работать. 
@@ -104,7 +103,7 @@ ENV_LOCATION=/opt/drova-desktop/NAME.env poetry run drova_validate
 
 Делаем ссылку на сервис
 ```bash
-ln -s /opt/drova-desktop/systemd/drova_socket@.service /etc/systemd/system/drova_socket@.service
+ln -s /opt/drova-desktop/systemd/drova_poll@.service /etc/systemd/system/drova_poll@.service
 ```
 
 Перезагружаем демоны systemd
@@ -123,12 +122,12 @@ ENV_LOCATION=NAME.env poetry run drova_validate
 
 Теперь можно запустить сервис командой - где вместо `NAME` подставить ваше имя
 ```bash
-systemctl start drova_socket@NAME
+systemctl start drova_poll@NAME
 ```
 
 Если ошибок не произошло - можно поставить в автозапуск
 ```bash
-systemctl enable drova_socket@NAME
+systemctl enable drova_poll@NAME
 ```
 
 Удачи!

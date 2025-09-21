@@ -1,0 +1,9 @@
+[Unit]
+Description=My Drova Desktop Service
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+EnvironmentFile=/opt/drova-desktop/%i.env
+WorkingDirectory=/opt/drova-desktop
+ExecStart=poerty run drova_poll
