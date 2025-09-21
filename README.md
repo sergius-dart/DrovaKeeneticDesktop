@@ -92,7 +92,7 @@ SHADOW_DEFENDER_DRIVES="CDE" # здесь перечислите слитно в
 Дальше выполняем команду на роутере:
 
 ```bash
-poetry run python drova_validate
+poetry run drova_validate
 ```
 
 Если написало `Ok!` - значит вы выставили .env верно и можно переходить к следующей части
