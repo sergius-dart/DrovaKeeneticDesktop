@@ -21,7 +21,7 @@ class AfterDisconnect:
 
     async def run(self) -> bool:
         self.logger.info("exit from shadow and reboot")
-        await sleep(1)
+        await sleep(5)
         # exit shadow mode and reboot
         await self.client.run(
             str(

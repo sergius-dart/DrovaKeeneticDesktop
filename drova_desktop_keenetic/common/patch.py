@@ -23,7 +23,7 @@ class IPatch(ABC):
 
     async def patch(self) -> None:
         async with NamedTemporaryFile("ab") as temp_file:
-            temp_file.close()
+            await temp_file.close()
             await self.sftp.get(str(self.remote_file_location), temp_file.name)
             await self._patch(Path(temp_file.name))
             await self.sftp.put(temp_file.name, str(self.remote_file_location))
@@ -88,7 +88,7 @@ class UbisoftAuthDiscard(IPatch):
     async def patch(self) -> None:
         for file in self.to_remove:
             if await self.sftp.exists(file):
-                self.logger.info("Remove file {file}")
+                self.logger.info(f"Remove file {file}")
                 await self.sftp.remove(PureWindowsPath(file))
 
 
@@ -105,7 +105,7 @@ class WargamingAuthDiscard(IPatch):
     async def patch(self) -> None:
         for file in self.to_remove:
             if await self.sftp.exists(file):
-                self.logger.info("Remove file {file}")
+                self.logger.info(f"Remove file {file}")
                 await self.sftp.remove(PureWindowsPath(file))
 
 

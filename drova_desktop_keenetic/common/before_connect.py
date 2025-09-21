@@ -37,7 +37,7 @@ class BeforeConnect:
                         )
                     )
                 )
-                await sleep(0.8)
+                await sleep(2)
 
                 for path in ALL_PATCHES:
                     self.logger.info(f"prepare {path.NAME}")

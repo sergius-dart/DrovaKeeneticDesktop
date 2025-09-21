@@ -2,12 +2,13 @@ from datetime import datetime
 from enum import StrEnum
 from ipaddress import IPv4Address
 from pathlib import PureWindowsPath
+from urllib.parse import urlencode, urlparse, urlunparse
 from uuid import UUID
 
 import aiohttp
 from pydantic import BaseModel, ConfigDict
 
-URL_SESSIONS = "https://services.drova.io/session-manager/sessions"
+URL_SESSIONS = "https://services.drova.io/session-manager/sessions?"
 URL_PRODUCT = "https://services.drova.io/server-manager/product/get/{product_id}"
 UUID_DESKTOP = UUID("9fd0eb43-b2bb-4ce3-93b8-9df63f209098")
 
@@ -54,6 +55,18 @@ async def get_latest_session(server_id: str, auth_token: str) -> SessionsEntity 
     async with aiohttp.ClientSession() as session:
         async with session.get(
             URL_SESSIONS, data={"serveri_id": server_id}, headers={"X-Auth-Token": auth_token}
+        ) as resp:
+            sessions = SessionsResponse(**await resp.json())
+            if not sessions.sessions:
+                return None
+            return sessions.sessions[0]
+
+
+async def get_new_session(server_id: str, auth_token: str) -> SessionsEntity | None:
+    query_params = f"state={StatusEnum.NEW.value}&state={StatusEnum.HANDSHAKE.value}"
+    async with aiohttp.ClientSession() as session:
+        async with session.get(
+            URL_SESSIONS + query_params, data={"serveri_id": server_id}, headers={"X-Auth-Token": auth_token}
         ) as resp:
             sessions = SessionsResponse(**await resp.json())
             if not sessions.sessions:

@@ -25,20 +25,20 @@ fi
 
 source $ENV_LOCATION
 
-if [ -z ${DROVA_SOCKET_LISTEN} ]; then
-    log_failure_msg "Bad DROVA_SOCKET_LISTEN in you env file"
+if [ -z ${WINDOWS_HOST} ]; then
+    log_failure_msg "Bad WINDOWS_HOST in you env file"
     exit 1
 fi
 
-DROVA_PID_FILE=/var/run/drova-desktop-${DROVA_SOCKET_LISTEN}.pid
+DROVA_PID_FILE=/var/run/drova-desktop-${WINDOWS_HOST}.pid
 
 start_drova_socket()
 {
-    if netstat -an46lp | grep 0.0.0.0:${DROVA_SOCKET_LISTEN} ; then
+    if status_of_proc -p $DROVA_PID_FILE poerty; then
         echo "Is running - exited - use restart"
         exit 1
     fi
-    ENV_LOCATION=${ENV_LOCATION} start-stop-daemon --start --quiet --background --chdir ${DROVA_INSTALL_LOCATION} --make-pidfile --pidfile $DROVA_PID_FILE --exec `which poetry` -- run drova_socket
+    ENV_LOCATION=${ENV_LOCATION} start-stop-daemon --start --quiet --background --chdir ${DROVA_INSTALL_LOCATION} --make-pidfile --pidfile $DROVA_PID_FILE --exec `which poetry` -- run drova_poll
 }
 
 case "$1" in
@@ -57,6 +57,6 @@ case "$1" in
         exit $? # notreached due to set -e
         ;;
     *)
-        echo "Usage: /etc/init.d/drova_socket {start|stop|restart|status}"
+        echo "Usage: /etc/init.d/drova_poll {start|stop|restart|status}"
         exit 1
 esac
