@@ -16,6 +16,7 @@ from drova_desktop_keenetic.common.contants import (
 from drova_desktop_keenetic.common.drova import get_new_session
 from drova_desktop_keenetic.common.helpers import (
     CheckDesktop,
+    RebootRequired,
     WaitFinishOrAbort,
     WaitNewDesktopSession,
 )
@@ -46,19 +47,24 @@ class DrovaPoll:
                     known_hosts=None,
                     encoding="windows-1251",
                 ) as conn:
-                    wait_new_desktop_session = WaitNewDesktopSession(conn)
-                    is_desktop_session = await wait_new_desktop_session.run()
-                    if is_desktop_session:
-                        logger.info("Waited desktop - clear this")
-                        before_connect = BeforeConnect(conn)
-                        await before_connect.run()
-                        logger.info("Wait finish session")
-                        wait_finish_session = WaitFinishOrAbort(conn)
-                        await wait_finish_session.run()
+                    try:
+                        wait_new_desktop_session = WaitNewDesktopSession(conn)
+                        is_desktop_session = await wait_new_desktop_session.run()
+                        if is_desktop_session:
+                            logger.info("Waited desktop - clear this")
+                            before_connect = BeforeConnect(conn)
+                            await before_connect.run()
+                            logger.info("Wait finish session")
+                            wait_finish_session = WaitFinishOrAbort(conn)
+                            await wait_finish_session.run()
 
-                        logger.info("Clear shadow defender and restart")
+                            logger.info("Clear shadow defender and restart")
+                            after_disconnect_client = AfterDisconnect(conn)
+                            await after_disconnect_client.run()
+                    except RebootRequired:
                         after_disconnect_client = AfterDisconnect(conn)
                         await after_disconnect_client.run()
+
             except (ChannelOpenError, OSError):
                 logger.info("Fail connect to windows - gaming or unavailable(reboot)")
 

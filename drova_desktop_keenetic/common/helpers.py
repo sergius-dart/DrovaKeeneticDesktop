@@ -15,6 +15,9 @@ from drova_desktop_keenetic.common.drova import (
 logger = logging.getLogger(__name__)
 
 
+class RebootRequired(RuntimeError): ...
+
+
 class BaseDrovaMerchantWindows:
     logger = logger.getChild("BaseDrovaMerchantWindows")
 
@@ -28,6 +31,9 @@ class BaseDrovaMerchantWindows:
         stdout = b""
         if isinstance(complete_process.stdout, str):
             stdout = complete_process.stdout.encode()
+
+        if complete_process.returncode == 1:
+            raise RebootRequired()
 
         self.server_id, self.auth_token = RegQueryEsme.parseAuthCode(stdout=stdout)
         return self.server_id, self.auth_token
