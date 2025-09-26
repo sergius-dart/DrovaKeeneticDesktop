@@ -3,7 +3,7 @@ from asyncio import sleep
 
 from asyncssh import SSHClientConnection
 
-from drova_desktop_keenetic.common.commands import RegQueryEsme
+from drova_desktop_keenetic.common.commands import NotFoundAuthCode, RegQueryEsme
 from drova_desktop_keenetic.common.drova import (
     UUID_DESKTOP,
     SessionsEntity,
@@ -13,6 +13,9 @@ from drova_desktop_keenetic.common.drova import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+class RebootRequired(RuntimeError): ...
 
 
 class BaseDrovaMerchantWindows:
@@ -26,10 +29,16 @@ class BaseDrovaMerchantWindows:
     async def get_actual_tokens(self) -> tuple[str, str]:
         complete_process = await self.client.run(str(RegQueryEsme()))
         stdout = b""
-        if isinstance(complete_process.stdout, str):
-            stdout = complete_process.stdout.encode()
 
-        self.server_id, self.auth_token = RegQueryEsme.parseAuthCode(stdout=stdout)
+        if complete_process.exit_status or complete_process.returncode:
+            raise RebootRequired()
+
+        try:
+            if isinstance(complete_process.stdout, str):
+                stdout = complete_process.stdout.encode()
+            self.server_id, self.auth_token = RegQueryEsme.parseAuthCode(stdout=stdout)
+        except NotFoundAuthCode:
+            raise RebootRequired
         return self.server_id, self.auth_token
 
     async def check_desktop_session(self, session: SessionsEntity) -> bool:
@@ -67,13 +76,9 @@ class WaitFinishOrAbort(BaseDrovaMerchantWindows):
 
     async def run(self) -> bool:
         while True:
-            complete_process = await self.client.run(str(RegQueryEsme()))
-            stdout = b""
-            if isinstance(complete_process.stdout, str):
-                stdout = complete_process.stdout.encode()
-            serveri_id, auth_token = RegQueryEsme.parseAuthCode(stdout=stdout)
+            await self.get_actual_tokens()
 
-            session = await get_latest_session(serveri_id, auth_token)
+            session = await get_latest_session(self.server_id, self.auth_token)
             if not session:
                 return False
             # wait close current session
@@ -87,13 +92,9 @@ class WaitNewDesktopSession(BaseDrovaMerchantWindows):
 
     async def run(self) -> bool:
         while True:
-            complete_process = await self.client.run(str(RegQueryEsme()))
-            stdout = b""
-            if isinstance(complete_process.stdout, str):
-                stdout = complete_process.stdout.encode()
-            serveri_id, auth_token = RegQueryEsme.parseAuthCode(stdout=stdout)
+            await self.get_actual_tokens()
 
-            session = await get_latest_session(serveri_id, auth_token)
+            session = await get_latest_session(self.server_id, self.auth_token)
             if not session:
                 return False
 

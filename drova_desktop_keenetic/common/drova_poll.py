@@ -16,6 +16,7 @@ from drova_desktop_keenetic.common.contants import (
 from drova_desktop_keenetic.common.drova import get_new_session
 from drova_desktop_keenetic.common.helpers import (
     CheckDesktop,
+    RebootRequired,
     WaitFinishOrAbort,
     WaitNewDesktopSession,
 )
@@ -46,21 +47,29 @@ class DrovaPoll:
                     known_hosts=None,
                     encoding="windows-1251",
                 ) as conn:
-                    wait_new_desktop_session = WaitNewDesktopSession(conn)
-                    is_desktop_session = await wait_new_desktop_session.run()
-                    if is_desktop_session:
-                        logger.info("Waited desktop - clear this")
-                        before_connect = BeforeConnect(conn)
-                        await before_connect.run()
-                        logger.info("Wait finish session")
-                        wait_finish_session = WaitFinishOrAbort(conn)
-                        await wait_finish_session.run()
+                    try:
+                        wait_new_desktop_session = WaitNewDesktopSession(conn)
+                        is_desktop_session = await wait_new_desktop_session.run()
+                        if is_desktop_session:
+                            logger.info("Waited desktop - clear this")
+                            before_connect = BeforeConnect(conn)
+                            await before_connect.run()
+                            logger.info("Wait finish session")
+                            wait_finish_session = WaitFinishOrAbort(conn)
+                            await wait_finish_session.run()
 
-                        logger.info("Clear shadow defender and restart")
+                            logger.info("Clear shadow defender and restart")
+                            after_disconnect_client = AfterDisconnect(conn)
+                            await after_disconnect_client.run()
+                    except RebootRequired:
+                        logger.info("Reboot required received!")
                         after_disconnect_client = AfterDisconnect(conn)
                         await after_disconnect_client.run()
+
             except (ChannelOpenError, OSError):
                 logger.info("Fail connect to windows - gaming or unavailable(reboot)")
+            except:
+                logger.exception("We have error")
 
             await asyncio.sleep(1)
 
@@ -68,23 +77,31 @@ class DrovaPoll:
         self.stop_future.set_result(True)
 
     async def _waitif_session_desktop_exists(self) -> None:
-        async with connect_ssh(
-            host=self.windows_host,
-            username=self.windows_login,
-            password=self.windows_password,
-            known_hosts=None,
-            encoding="windows-1251",
-        ) as conn:
-            check_desktop = CheckDesktop(conn)
-            is_desktop = await check_desktop.run()
-            if is_desktop:
-                logger.info("Wait finish session")
-                wait_finish_session = WaitFinishOrAbort(conn)
-                await wait_finish_session.run()
+        try:
+            async with connect_ssh(
+                host=self.windows_host,
+                username=self.windows_login,
+                password=self.windows_password,
+                known_hosts=None,
+                encoding="windows-1251",
+            ) as conn:
+                try:
+                    check_desktop = CheckDesktop(conn)
+                    is_desktop = await check_desktop.run()
+                    if is_desktop:
+                        logger.info("Wait finish session")
+                        wait_finish_session = WaitFinishOrAbort(conn)
+                        await wait_finish_session.run()
 
-                logger.info("Clear shadow defender and restart")
-                after_disconnect_client = AfterDisconnect(conn)
-                await after_disconnect_client.run()
+                        logger.info("Clear shadow defender and restart")
+                        after_disconnect_client = AfterDisconnect(conn)
+                        await after_disconnect_client.run()
+                except RebootRequired:
+                    logger.info("Reboot required received!")
+                    after_disconnect_client = AfterDisconnect(conn)
+                    await after_disconnect_client.run()
+        except:
+            logger.exception("We have error")
 
     async def serve(self, wait_forever=False):
         await self._waitif_session_desktop_exists()

@@ -34,7 +34,7 @@ DROVA_PID_FILE=/var/run/drova-desktop-${WINDOWS_HOST}.pid
 
 start_drova_socket()
 {
-    if status_of_proc -p $DROVA_PID_FILE poerty; then
+    if pidofproc -p $DROVA_PID_FILE poerty; then
         echo "Is running - exited - use restart"
         exit 1
     fi
