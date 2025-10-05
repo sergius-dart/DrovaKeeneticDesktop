@@ -41,9 +41,10 @@ class BeforeConnect:
 
                 for path in ALL_PATCHES:
                     self.logger.info(f"prepare {path.NAME}")
-                    await self.client.run(str(TaskKill(image=path.TASKKILL_IMAGE)))
+                    if path.TASKKILL_IMAGE:
+                        await self.client.run(str(TaskKill(image=path.TASKKILL_IMAGE)))
                     await sleep(0.2)
-                    pather = path(sftp)
+                    pather = path(self.client, sftp)
                     await pather.patch()
 
         except Exception:

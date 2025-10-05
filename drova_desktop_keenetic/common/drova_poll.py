@@ -48,8 +48,14 @@ class DrovaPoll:
                     encoding="windows-1251",
                 ) as conn:
                     try:
-                        wait_new_desktop_session = WaitNewDesktopSession(conn)
-                        is_desktop_session = await wait_new_desktop_session.run()
+                        # check reboot before close session
+                        check = CheckDesktop(conn)
+                        is_desktop_session = await check.run()
+
+                        if not is_desktop_session:
+                            wait_new_desktop_session = WaitNewDesktopSession(conn)
+                            is_desktop_session = await wait_new_desktop_session.run()
+
                         if is_desktop_session:
                             logger.info("Waited desktop - clear this")
                             before_connect = BeforeConnect(conn)
