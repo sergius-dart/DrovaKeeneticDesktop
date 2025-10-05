@@ -1,9 +1,9 @@
 import logging
 from asyncio import sleep
+from typing import Dict
 
-from async_property import async_property
 from asyncssh import SSHClientConnection
-from expiringdict import ExpiringDict
+from expiringdict import ExpiringDict  # type: ignore
 
 from drova_desktop_keenetic.common.commands import NotFoundAuthCode, RegQueryEsme
 from drova_desktop_keenetic.common.drova import (
@@ -27,14 +27,12 @@ class BaseDrovaMerchantWindows:
         self.client = client
         self.dict_store = ExpiringDict(max_len=100, max_age_seconds=60)
 
-    @async_property
-    async def auth_token(self):
+    async def get_auth_token(self):
         if "auth_token" not in self.dict_store:
             await self.refresh_actual_tokens()
         return self.dict_store["auth_token"]
 
-    @async_property
-    async def server_id(self):
+    async def get_server_id(self):
         if "server_id" not in self.dict_store:
             await self.refresh_actual_tokens()
         return self.dict_store["server_id"]
@@ -59,7 +57,7 @@ class BaseDrovaMerchantWindows:
         if session.product_id == UUID_DESKTOP:
             return True
         # check alloed only on desktop
-        product_info = await get_product_info(session.product_id, auth_token=await self.auth_token)
+        product_info = await get_product_info(session.product_id, auth_token=await self.get_auth_token())
         self.logger.info(f"product_info : {product_info}")
         return product_info.use_default_desktop
 
@@ -69,8 +67,8 @@ class CheckDesktop(BaseDrovaMerchantWindows):
 
     async def run(self) -> bool:
 
-        self.logger.info(f"Start read latest session with token {await self.auth_token}")
-        session = await get_latest_session(await self.server_id, await self.auth_token)
+        self.logger.info(f"Start read latest session with token {await self.get_auth_token()}")
+        session = await get_latest_session(await self.get_server_id(), await self.get_auth_token())
         self.logger.debug(f"Session : {session}")
 
         if not session:
@@ -88,7 +86,7 @@ class WaitFinishOrAbort(BaseDrovaMerchantWindows):
     async def run(self) -> bool:
         while True:
 
-            session = await get_latest_session(await self.server_id, await self.auth_token)
+            session = await get_latest_session(await self.get_server_id(), await self.get_auth_token())
             if not session:
                 return False
             # wait close current session
@@ -103,7 +101,7 @@ class WaitNewDesktopSession(BaseDrovaMerchantWindows):
     async def run(self) -> bool:
         while True:
 
-            session = await get_latest_session(await self.server_id, await self.auth_token)
+            session = await get_latest_session(await self.get_server_id(), await self.get_auth_token())
             if not session:
                 return False
 

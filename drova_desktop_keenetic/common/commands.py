@@ -1,9 +1,13 @@
+import os
 import re
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
+from enum import StrEnum
 from typing import Literal
 
 from mslex import quote
+
+from drova_desktop_keenetic.common.contants import WINDOWS_LOGIN, WINDOWS_PASSWORD
 
 
 class PsExecNotFoundExecutable(RuntimeError): ...
@@ -30,6 +34,9 @@ class PsExec(ICommandBuilder):
     interactive: int | None = 1
     accepteula: bool = True
     command: ICommandBuilder | str = ""
+    detach: bool = True
+    user: str = os.environ[WINDOWS_LOGIN]
+    password: str = os.environ[WINDOWS_PASSWORD]
 
     def _build_command(self) -> str:
         command = ["psexec"]
@@ -39,6 +46,15 @@ class PsExec(ICommandBuilder):
 
         if self.accepteula:
             command += ["-accepteula"]
+
+        if self.detach:
+            command += ["-d"]
+
+        if self.user:
+            command += ["-u", quote(self.user)]
+
+        if self.password:
+            command += ["-p", quote(self.password)]
 
         command += [quote(str(self.command))]
 
@@ -139,3 +155,44 @@ class RegQueryEsme(ICommandBuilder):
             raise NotFoundAuthCode()
 
         return matches_server_id["server_id"], matches_auth_token[0]
+
+
+class RegValueType(StrEnum):
+    REG_SZ = "REG_SZ"
+    REG_MULTI_SZ = "REG_MULTI_SZ"
+    REG_DWORD_BIG_ENDIAN = "REG_DWORD_BIG_ENDIAN"
+    REG_DWORD = "REG_DWORD"
+    REG_BINARY = "REG_BINARY"
+    REG_DWORD_LITTLE_ENDIAN = "REG_DWORD_LITTLE_ENDIAN"
+    REG_LINK = "REG_LINK"
+    REG_FULL_RESOURCE_DESCRIPTOR = "REG_FULL_RESOURCE_DESCRIPTOR"
+    REG_EXPAND_SZ = "REG_EXPAND_SZ"
+
+
+@dataclass
+class RegAdd(ICommandBuilder):
+
+    reg_path: str
+    value_name: str | None = None
+    value_type: RegValueType | None = None
+    value: str | int | bytes | None = None
+    force = True
+
+    def _build_command(self):
+        args = ["reg", "add", quote(self.reg_path)]
+        if self.force:
+            args.append("/f")
+
+        if self.value_name is not None:
+            args.append("/v")
+            args.append(quote(self.value_name))
+
+        if self.value_type is not None:
+            args.append("/t")
+            args.append(self.value_type)
+
+        if self.value is not None:
+            args.append("/d")
+            args.append(f"{self.value}")
+
+        return " ".join(args)

@@ -156,17 +156,6 @@ files = [
 ]
 
 [[package]]
-name = "async-property"
-version = "0.2.2"
-description = "Python decorator for async properties."
-optional = false
-python-versions = "*"
-files = [
-    {file = "async_property-0.2.2-py2.py3-none-any.whl", hash = "sha256:8924d792b5843994537f8ed411165700b27b2bd966cefc4daeefc1253442a9d7"},
-    {file = "async_property-0.2.2.tar.gz", hash = "sha256:17d9bd6ca67e27915a75d92549df64b5c7174e9dc806b30a3934dc4ff0506380"},
-]
-
-[[package]]
 name = "asyncio"
 version = "4.0.0"
 description = "Deprecated backport of asyncio; use the stdlib package instead"
@@ -1338,4 +1327,4 @@ propcache = ">=0.2.1"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "a8fa930e9f61b9aa4dc587f9e375165fb5be733727ffd3fff80b9014cc9bc16b"
+content-hash = "957937e9cc822824535dad51ee842c803a9a8e5ea268c893c55569ecd8531d7f"
