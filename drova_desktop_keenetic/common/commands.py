@@ -1,7 +1,7 @@
 import os
 import re
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import StrEnum
 from typing import Literal
 
@@ -31,9 +31,9 @@ class ICommandBuilder(ABC):
 
 @dataclass
 class PsExec(ICommandBuilder):
-    interactive: int | None = 1
-    accepteula: bool = True
     command: ICommandBuilder | str = ""
+    interactive: int | None = field(kw_only=True, default=1)
+    accepteula: bool = True
     detach: bool = True
     user: str = os.environ[WINDOWS_LOGIN]
     password: str = os.environ[WINDOWS_PASSWORD]
@@ -56,8 +56,7 @@ class PsExec(ICommandBuilder):
         if self.password:
             command += ["-p", quote(self.password)]
 
-        command += [quote(str(self.command))]
-
+        command += [str(self.command)]
         return " ".join(command)
 
     @staticmethod
@@ -69,7 +68,6 @@ class PsExec(ICommandBuilder):
 
         r = re.compile(r"(?P<executable>\S*) exited on (?P<hostname>\S*) with error code (?P<exit_code>\d+)\.")
 
-        print(last_line.decode("windows-1251"))
         if match := r.search(last_line.decode("windows-1251")):
             return int(match.group("exit_code") + "0")
 

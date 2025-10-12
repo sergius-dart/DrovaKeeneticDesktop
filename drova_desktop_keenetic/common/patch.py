@@ -1,6 +1,6 @@
 import logging
 from abc import ABC, abstractmethod
-from asyncio import sleep, wait
+from asyncio import create_task, sleep, wait
 from configparser import ConfigParser
 from pathlib import Path, PureWindowsPath
 from typing import Generator
@@ -8,7 +8,6 @@ from typing import Generator
 from aiofiles.tempfile import NamedTemporaryFile
 from asyncssh import SFTPClient, SSHClientConnection
 from pydantic import BaseModel
-from asyncio import create_task
 
 from drova_desktop_keenetic.common.commands import (
     PsExec,
