@@ -45,7 +45,10 @@ class BeforeConnect:
                         await self.client.run(str(TaskKill(image=path.TASKKILL_IMAGE)))
                     await sleep(0.2)
                     pather = path(self.client, sftp)
-                    await pather.patch()
+                    try:
+                        await pather.patch()
+                    except Exception:
+                        logger.exception(f"Problem with patch apply - {path.NAME} skipped!")
 
         except Exception:
             logger.exception("We have problem")
