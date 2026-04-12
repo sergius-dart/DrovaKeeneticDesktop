@@ -25,7 +25,7 @@ HKEY_LOCAL_MACHINE\SOFTWARE\ITKey\Esme\servers\85dd80c4-adc1-1111-1111-111111111
     await helper.refresh_actual_tokens()
     assert client.run.call_count == 1
 
-    @mocker.patch("drova_desktop_keenetic.common.helpers.get_latest_session")
+    @mocker.patch.object(helper.drove_service, "get_latest_session")
     async def _():
         return None
 
@@ -37,38 +37,31 @@ HKEY_LOCAL_MACHINE\SOFTWARE\ITKey\Esme\servers\85dd80c4-adc1-1111-1111-111111111
 @pytest.mark.asyncio
 async def test_RebootRequiredNoAuthCode():
     with pytest.raises(RebootRequired):
-
-        # async def new_run(*args,**kwargs)-> SSHCompletedProcess:
-        result = SSHCompletedProcess()
-        result.returncode = 0
-        result.stdout = r"""
+        result = SSHCompletedProcess(
+            returncode=0,
+            stdout=r"""
     HKEY_LOCAL_MACHINE\SOFTWARE\ITKey\Esme\servers\85dd80c4-adc1-1111-1111-111111111111
-    """
-        # return result
+    """,
+        )
 
         client = Mock()
         client.run = AsyncMock(return_value=result)
 
         helper = CheckDesktop(client)
         await helper.refresh_actual_tokens()
-        print(client.run.called)
+
         assert client.run.call_count == 1
 
 
 @pytest.mark.asyncio
 async def test_RebootRequiredBadReturn():
     with pytest.raises(RebootRequired):
-
-        # async def new_run(*args,**kwargs)-> SSHCompletedProcess:
-        result = SSHCompletedProcess()
-        result.returncode = 1
-        result.stdout = None
-        # return result
+        result = SSHCompletedProcess(returncode=1, stdout=None)
 
         client = Mock()
         client.run = AsyncMock(return_value=result)
 
         helper = CheckDesktop(client)
         await helper.refresh_actual_tokens()
-        print(client.run.called)
+
         assert client.run.call_count == 1

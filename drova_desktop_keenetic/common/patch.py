@@ -44,7 +44,9 @@ class EpicGamesAuthDiscard(IPatch):
     NAME = "epicgames"
     TASKKILL_IMAGE = "EpicGamesLauncher.exe"
 
-    remote_file_location = PureWindowsPath(r"AppData\Local\EpicGamesLauncher\Saved\Config\WindowsEditor\GameUserSettings.ini")
+    remote_file_location = PureWindowsPath(
+        r"AppData\Local\EpicGamesLauncher\Saved\Config\WindowsEditor\GameUserSettings.ini"
+    )
 
     async def _patch(self, file: Path) -> None:
         config = ConfigParser(strict=False)

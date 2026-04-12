@@ -7,8 +7,6 @@ import pytest
 import pytest_asyncio
 
 from drova_desktop_keenetic.common.drova_poll import DrovaPoll
-from drova_desktop_keenetic.common.drova_server_binary import BLOCK_SIZE
-from drova_desktop_keenetic.common.drova_socket import DrovaSocket
 
 WAIT_NEW_DESKTOP_SESSION_RUN = "drova_desktop_keenetic.common.helpers.WaitNewDesktopSession.run"
 WAIT_FINISH_OR_ABORT_RUN = "drova_desktop_keenetic.common.helpers.WaitFinishOrAbort.run"
