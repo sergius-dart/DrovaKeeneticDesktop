@@ -13,7 +13,7 @@ from drova_desktop_keenetic.common.contants import (
     WINDOWS_LOGIN,
     WINDOWS_PASSWORD,
 )
-from drova_desktop_keenetic.common.drova import get_new_session
+from drova_desktop_keenetic.common.drova import DrovaService
 from drova_desktop_keenetic.common.helpers import (
     CheckDesktop,
     RebootRequired,
