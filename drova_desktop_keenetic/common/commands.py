@@ -194,3 +194,18 @@ class RegAdd(ICommandBuilder):
             args.append(f"{self.value}")
 
         return " ".join(args)
+
+
+@dataclass
+class WmicGetLocalDrives(ICommandBuilder):
+    def _build_command(self):
+        return "wmic logicaldisk where drivetype=3 get name"
+
+    @staticmethod
+    def parse(output: str):
+        result = []
+        for line in output.split("\n")[1:]:
+            if not line:
+                continue
+            result.append(line[0])
+        return result
