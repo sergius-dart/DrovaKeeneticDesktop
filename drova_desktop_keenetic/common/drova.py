@@ -2,7 +2,6 @@ from datetime import datetime
 from enum import StrEnum
 from ipaddress import IPv4Address
 from pathlib import PureWindowsPath
-from urllib.parse import urlencode, urlparse, urlunparse
 from uuid import UUID
 
 import aiohttp
@@ -122,7 +121,7 @@ class FakeDrova:
         self.product = ProductInfo(product_id=PRODUCT_UUID_BG3)
 
     @property
-    def fakedHost(self):
+    def faked_host(self):
         return f"http://{self._host}:{self._port}"
 
     async def start(self):
@@ -136,8 +135,8 @@ class FakeDrova:
         self._site = None
         self._runner = None
 
-    async def _get_session(self, request: web.Request):
+    async def _get_session(self, _: web.Request):
         return web.json_response(self.session.model_dump(mode="json"))
 
-    async def _get_product(self, request: web.Request):
+    async def _get_product(self, _: web.Request):
         return web.json_response(self.product.model_dump(mode="json"))

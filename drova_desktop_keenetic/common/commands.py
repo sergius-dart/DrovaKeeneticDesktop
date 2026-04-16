@@ -60,7 +60,7 @@ class PsExec(ICommandBuilder):
         return " ".join(command)
 
     @staticmethod
-    def parseStderrErrorCode(stderr: bytes) -> int:
+    def parse_stderr_errror_code(stderr: bytes) -> int:
         last_line = b""
         for line in stderr.split(b"\r\n"):
             if line:
@@ -125,7 +125,7 @@ class ShadowDefenderCLI(ICommandBuilder):
                     assert self.drives
                     command += [f'/commit:"{drive}:\\"' for drive in self.drives.split("")]
                 case "list":
-                    command += [f"/list"]
+                    command += ["/list"]
         command += ["/now"]
         return " ".join(command)
 
@@ -136,7 +136,7 @@ class RegQueryEsme(ICommandBuilder):
         return " ".join(("reg", "query", r"HKEY_LOCAL_MACHINE\SOFTWARE\ITKey\Esme\servers", "/s", "/f", "auth_token"))
 
     @staticmethod
-    def parseAuthCode(stdout: bytes) -> tuple[str, str]:
+    def parse_auth_code(stdout: bytes) -> tuple[str, str]:
         r_auth_token = re.compile(r"auth_token\s+REG_SZ\s+(?P<auth_token>\S+)", re.MULTILINE)
 
         r_servers = re.compile(r"servers\\(?P<server_id>\S+)", re.MULTILINE)

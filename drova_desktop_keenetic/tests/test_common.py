@@ -9,17 +9,17 @@ from drova_desktop_keenetic.common.commands import (
 )
 
 
-def test_parse_PSExec() -> None:
+def test_parse_PSExec() -> None:  # pylint: disable=C0103
     with pytest.raises(PsExecNotFoundExecutable):
-        PsExec.parseStderrErrorCode(b"Test\r\nNot found executable\r\n\r\n\r\n")
+        PsExec.parse_stderr_errror_code(b"Test\r\nNot found executable\r\n\r\n\r\n")
 
     with pytest.raises(PsExecNotFoundExecutable):
-        PsExec.parseStderrErrorCode("Не удается найти указанный файл".encode("windows-1251"))
+        PsExec.parse_stderr_errror_code("Не удается найти указанный файл".encode("windows-1251"))
 
 
-def test_parse_RegQueryEsme() -> None:
+def test_parse_RegQueryEsme() -> None:  # pylint: disable=C0103
     with pytest.raises(DuplicateAuthCode):
-        RegQueryEsme.parseAuthCode(
+        RegQueryEsme.parse_auth_code(
             r"""
 HKEY_LOCAL_MACHINE\SOFTWARE\ITKey\Esme\servers\8ff8ea03-5b09-4fad-a132-888888888888
     auth_token    REG_SZ    07c43183-61b2-4e18-91cd-888888888888
@@ -30,7 +30,7 @@ HKEY_LOCAL_MACHINE\SOFTWARE\ITKey\Esme\servers\8ff8ea03-5b09-4fad-a132-888888888
         )
 
     with pytest.raises(NotFoundAuthCode):
-        RegQueryEsme.parseAuthCode(
+        RegQueryEsme.parse_auth_code(
             r"""
 HKEY_LOCAL_MACHINE\SOFTWARE\ITKey\Esme\servers\8ff8ea03-5b09-4fad-a132-888888888888
 """.encode(
@@ -38,7 +38,7 @@ HKEY_LOCAL_MACHINE\SOFTWARE\ITKey\Esme\servers\8ff8ea03-5b09-4fad-a132-888888888
             )
         )
 
-    server_id, auth_token = RegQueryEsme.parseAuthCode(
+    server_id, auth_token = RegQueryEsme.parse_auth_code(
         r"""
 HKEY_LOCAL_MACHINE\SOFTWARE\ITKey\Esme\servers\8ff8ea03-5b09-4fad-a132-888888888888
     auth_token    REG_SZ    07c43183-61b2-4e18-91cd-888888888888
