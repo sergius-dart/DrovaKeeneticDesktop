@@ -1,7 +1,6 @@
 import os
 
 from aiofiles.tempfile import NamedTemporaryFile
-from asyncssh import SSHClientConnectionOptions
 from asyncssh import connect as connect_ssh
 
 from drova_desktop_keenetic.common.commands import PsExec, ShadowDefenderCLI
@@ -40,12 +39,12 @@ async def validate_creds():
         async with NamedTemporaryFile() as f:
             async with conn.start_sftp_client() as sftp:
                 await sftp.get(r"C:\Windows\System32\drivers\etc\hosts", f.name)
-                with open(f.name, "r") as local_f:
+                with open(f.name, "r", encoding="utf8") as local_f:
                     assert local_f.read()
                 print("sftp open")
 
         result_psexec = await conn.run(str(PsExec(r"cmd /c 'echo 1'", detach=False)))
-        PsExec.parseStderrErrorCode(
+        PsExec.parse_stderr_errror_code(
             result_psexec.stderr
             if isinstance(result_psexec.stderr, bytes)
             else result_psexec.stderr.encode("windows-1251")

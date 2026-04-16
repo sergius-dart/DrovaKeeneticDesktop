@@ -8,7 +8,6 @@ packages = [{include = "drova_desktop_keenetic"}]
 
 [tool.poetry.scripts]
 drova_validate = "drova_desktop_keenetic.bin.drova_validate:main"
-drova_socket = "drova_desktop_keenetic.bin.drova_socket:run_async_main"
 drova_poll = "drova_desktop_keenetic.bin.drova_poll:run_async_main"
 
 [tool.poetry.dependencies]
@@ -30,6 +29,7 @@ black = "^25.1.0"
 isort = "^6.0.1"
 mypy = "^1.17.1"
 types-aiofiles = "^24.1.0.20250822"
+pylint = "^4.0.5"
 
 
 [build-system]
@@ -53,3 +53,17 @@ exclude = [
 
 [tool.isort]
 profile = "black"
+
+[tool.pylint]
+min-similarity-lines = 50
+max-line-length = 120
+max-module-lines=2000
+max-statements=102
+min-public-methods=1
+
+disable = [
+    "C0114",  # Missing module docstring
+    "C0115",  # Missing class docstring
+    "C0116",  # Missing function or method docstring
+    "W1203",  # lazy formatting in logging
+]

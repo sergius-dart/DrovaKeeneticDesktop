@@ -1,7 +1,5 @@
 import asyncio
-import os
 
-from drova_desktop_keenetic.common.contants import DROVA_SOCKET_LISTEN
 from drova_desktop_keenetic.common.drova_poll import DrovaPoll
 
 
