@@ -1,7 +1,6 @@
 import asyncio
 import logging
 import os
-from logging import DEBUG, basicConfig
 
 from asyncssh import connect as connect_ssh
 from asyncssh.misc import ChannelOpenError
@@ -13,7 +12,6 @@ from drova_desktop_keenetic.common.contants import (
     WINDOWS_LOGIN,
     WINDOWS_PASSWORD,
 )
-from drova_desktop_keenetic.common.drova import DrovaService
 from drova_desktop_keenetic.common.helpers import (
     CheckDesktop,
     RebootRequired,
@@ -74,7 +72,7 @@ class DrovaPoll:
 
             except (ChannelOpenError, OSError):
                 logger.info("Fail connect to windows - gaming or unavailable(reboot)")
-            except:
+            except Exception:  # pylint: disable=W0718
                 logger.exception("We have error")
 
             await asyncio.sleep(1)
@@ -106,7 +104,7 @@ class DrovaPoll:
                     logger.info("Reboot required received!")
                     after_disconnect_client = AfterDisconnect(conn)
                     await after_disconnect_client.run()
-        except:
+        except Exception:  # pylint: disable=W0718
             logger.exception("We have error")
 
     async def serve(self, wait_forever=False):

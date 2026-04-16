@@ -7,7 +7,7 @@ from drova_desktop_keenetic.common.helpers import CheckDesktop, RebootRequired
 
 
 @pytest.mark.asyncio
-async def test_CheckDesktop(mocker):
+async def test_CheckDesktop(mocker):  # pylint: disable=C0103
 
     # async def new_run(*args,**kwargs)-> SSHCompletedProcess:
     result = SSHCompletedProcess()
@@ -35,7 +35,7 @@ HKEY_LOCAL_MACHINE\SOFTWARE\ITKey\Esme\servers\85dd80c4-adc1-1111-1111-111111111
 
 
 @pytest.mark.asyncio
-async def test_RebootRequiredNoAuthCode():
+async def test_RebootRequiredNoAuthCode():  # pylint: disable=C0103
     with pytest.raises(RebootRequired):
         result = SSHCompletedProcess(
             returncode=0,
@@ -54,7 +54,7 @@ async def test_RebootRequiredNoAuthCode():
 
 
 @pytest.mark.asyncio
-async def test_RebootRequiredBadReturn():
+async def test_RebootRequiredBadReturn():  # pylint: disable=C0103
     with pytest.raises(RebootRequired):
         result = SSHCompletedProcess(returncode=1, stdout=None)
 

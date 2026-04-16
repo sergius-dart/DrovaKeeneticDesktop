@@ -9,7 +9,7 @@ from drova_desktop_keenetic.common.contants import (
     SHADOW_DEFENDER_DRIVES,
     SHADOW_DEFENDER_PASSWORD,
 )
-from drova_desktop_keenetic.common.patch import ALL_PATCHES
+from drova_desktop_keenetic.common.patch import SessionHandlerContext, make_patchers
 
 logger = logging.getLogger(__name__)
 
@@ -21,12 +21,13 @@ class BeforeConnect:
         self.client = client
 
     async def run(self) -> bool:
+        patchers = make_patchers()
 
         self.logger.info("open sftp")
         try:
             async with self.client.start_sftp_client() as sftp:
-
-                self.logger.info(f"start shadow")
+                ctx = SessionHandlerContext(ssh=self.client, sftp=sftp)
+                self.logger.info("start shadow")
                 # start shadow mode
                 await self.client.run(
                     str(
@@ -39,17 +40,16 @@ class BeforeConnect:
                 )
                 await sleep(2)
 
-                for path in ALL_PATCHES:
-                    self.logger.info(f"prepare {path.NAME}")
-                    if path.TASKKILL_IMAGE:
-                        await self.client.run(str(TaskKill(image=path.TASKKILL_IMAGE)))
+                for patch in patchers:
+                    self.logger.info(f"prepare {patch.NAME}")
+                    if patch.TASKKILL_IMAGE:
+                        await self.client.run(str(TaskKill(image=patch.TASKKILL_IMAGE)))
                     await sleep(0.2)
-                    pather = path(self.client, sftp)
                     try:
-                        await pather.patch()
-                    except Exception:
-                        logger.exception(f"Problem with patch apply - {path.NAME} skipped!")
+                        await patch.on_session_start(ctx)
+                    except Exception:  # pylint: disable=W0718
+                        logger.exception(f"Problem with patch apply - {patch.NAME} skipped!")
 
-        except Exception:
+        except Exception:  # pylint: disable=W0718
             logger.exception("We have problem")
         return True

@@ -1,10 +1,7 @@
-import asyncio
 import logging
 from logging import DEBUG, basicConfig
-from unittest import mock
 
 import pytest
-import pytest_asyncio
 
 from drova_desktop_keenetic.common.drova_poll import DrovaPoll
 
@@ -29,12 +26,9 @@ async def test_poll_full(mocker):
     @mocker.patch(BEFORE_CONNECT_RUN)
     @mocker.patch(AFTER_DISCONNECT_RUN)
     @mocker.patch(DROVA_SOCKET_CONNECT_SSH)
-    async def _(self) -> bool:
-        return True
-
     @mocker.patch(CHECK_DESKTOP_RUN)
-    async def _(self) -> bool:
-        return False
+    async def _() -> bool:
+        return True
 
     drova_socket = DrovaPoll(windows_host="127.0.0.1")
     await drova_socket.serve()

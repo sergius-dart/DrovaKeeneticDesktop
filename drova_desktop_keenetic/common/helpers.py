@@ -1,6 +1,5 @@
 import logging
 from asyncio import sleep
-from typing import Dict
 
 from asyncssh import SSHClientConnection
 from expiringdict import ExpiringDict  # type: ignore
@@ -42,9 +41,9 @@ class BaseDrovaMerchantWindows:
         try:
             if isinstance(complete_process.stdout, str):
                 stdout = complete_process.stdout.encode()
-            self.dict_store["server_id"], self.dict_store["auth_token"] = RegQueryEsme.parseAuthCode(stdout=stdout)
-        except NotFoundAuthCode:
-            raise RebootRequired
+            self.dict_store["server_id"], self.dict_store["auth_token"] = RegQueryEsme.parse_auth_code(stdout=stdout)
+        except NotFoundAuthCode as exc:
+            raise RebootRequired from exc
         return self.dict_store["server_id"], self.dict_store["auth_token"]
 
     async def check_desktop_session(self, session: SessionsEntity) -> bool:

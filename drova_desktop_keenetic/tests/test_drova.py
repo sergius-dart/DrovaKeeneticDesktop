@@ -7,7 +7,7 @@ FAKE_AUTH_TOKEN = "test"
 
 
 @pytest_asyncio.fixture
-async def fakeDrova():
+async def fake_drova():
     server = FakeDrova()
     await server.start()
     yield server
@@ -15,8 +15,8 @@ async def fakeDrova():
 
 
 @pytest.mark.asyncio
-async def test_DrovaServiceWithFake(fakeDrova: FakeDrova):
-    service = DrovaService(fakeDrova.fakedHost)
+async def test_DrovaServiceWithFake(fake_drova: FakeDrova):  # pylint: disable=C0103,W0621
+    service = DrovaService(fake_drova.faked_host)
 
     session: SessionsEntity = await service.get_latest_session("", FAKE_AUTH_TOKEN)
     assert session
