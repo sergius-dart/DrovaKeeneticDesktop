@@ -11,7 +11,12 @@ from drova_desktop_keenetic.common.commands import (
     RegAdd,
     RegValueType,
 )
-from drova_desktop_keenetic.common.patch import IPatch, ISessionHandler, SessionHandlerContext, patcher
+from drova_desktop_keenetic.common.patch import (
+    IPatch,
+    ISessionHandler,
+    SessionHandlerContext,
+    patcher,
+)
 
 logger = logging.getLogger(__name__)
 

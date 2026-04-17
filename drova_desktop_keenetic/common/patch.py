@@ -1,6 +1,6 @@
-from dataclasses import dataclass
 import logging
 from abc import ABC, abstractmethod
+from dataclasses import dataclass
 from pathlib import Path, PureWindowsPath
 
 from aiofiles.tempfile import NamedTemporaryFile
@@ -23,7 +23,15 @@ class SessionHandlerContext:
 
 class ISessionHandler(ABC):
     @abstractmethod
+    async def on_idle(self, ctx: SessionHandlerContext):
+        pass
+
+    @abstractmethod
     async def on_session_start(self, ctx: SessionHandlerContext):
+        pass
+
+    @abstractmethod
+    async def on_session_active(self, ctx: SessionHandlerContext):
         pass
 
     @abstractmethod
@@ -47,10 +55,16 @@ class IPatch(ISessionHandler):
             await self._patch(Path(str(temp_file.name)), ctx)
             await ctx.sftp.put(str(temp_file.name), str(self.remote_file_location))
 
+    async def on_idle(self, ctx: SessionHandlerContext):
+        pass
+
     async def on_session_start(self, ctx: SessionHandlerContext):
         if self.TASKKILL_IMAGE:
             await ctx.ssh.run(str(TaskKill(image=self.TASKKILL_IMAGE)))
         return await self.patch(ctx)
+
+    async def on_session_active(self, ctx: SessionHandlerContext):
+        pass
 
     async def on_session_end(self, ctx: SessionHandlerContext):
         return None

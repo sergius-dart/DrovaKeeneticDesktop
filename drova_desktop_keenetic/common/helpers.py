@@ -5,7 +5,12 @@ from asyncssh import SSHClientConnection
 from expiringdict import ExpiringDict  # type: ignore
 
 from drova_desktop_keenetic.common.commands import NotFoundAuthCode, RegQueryEsme
-from drova_desktop_keenetic.common.drova import PRODUCT_UUID_DESKTOP, SessionsEntity, StatusEnum, DrovaService
+from drova_desktop_keenetic.common.drova import (
+    PRODUCT_UUID_DESKTOP,
+    DrovaService,
+    SessionsEntity,
+    StatusEnum,
+)
 
 logger = logging.getLogger(__name__)
 
