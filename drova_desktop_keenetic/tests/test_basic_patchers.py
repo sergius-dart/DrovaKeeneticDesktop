@@ -1,5 +1,6 @@
 import pytest
-from drova_desktop_keenetic.common.patch import ISessionHandler, patcher, _ALL_PATCHES
+
+from drova_desktop_keenetic.common.patch import _ALL_PATCHES, ISessionHandler, patcher
 
 
 def test_registered():

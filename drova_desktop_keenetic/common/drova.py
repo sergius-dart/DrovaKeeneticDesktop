@@ -6,7 +6,7 @@ from uuid import UUID
 
 import aiohttp
 from aiohttp import web
-from pydantic import BaseModel, ConfigDict, UUID4
+from pydantic import UUID4, BaseModel, ConfigDict
 
 SESSION_UUID_FAKE = UUID("e099d33f-51f3-4129-a3a6-b75d75885b45")
 CLIENT_UUID_FAKE = UUID("fefca70b-0af8-463d-82bb-724edc1da927")
