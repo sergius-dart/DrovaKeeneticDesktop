@@ -1,7 +1,12 @@
 import pytest
 import pytest_asyncio
 
-from drova_desktop_keenetic.common.drova import DrovaService, FakeDrova, ProductInfo, SessionsEntity
+from drova_desktop_keenetic.common.drova import (
+    DrovaService,
+    FakeDrova,
+    ProductInfo,
+    SessionsEntity,
+)
 
 FAKE_AUTH_TOKEN = "test"
 
