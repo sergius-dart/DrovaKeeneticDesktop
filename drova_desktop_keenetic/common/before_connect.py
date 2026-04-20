@@ -26,7 +26,7 @@ class BeforeConnect:
         self.logger.info("open sftp")
         try:
             async with self.client.start_sftp_client() as sftp:
-                ctx = SessionHandlerContext(ssh=self.client, sftp=sftp)
+                ctx = SessionHandlerContext(ssh=self.client, sftp=sftp, config=None)
                 self.logger.info("start shadow")
                 # start shadow mode
                 await self.client.run(
