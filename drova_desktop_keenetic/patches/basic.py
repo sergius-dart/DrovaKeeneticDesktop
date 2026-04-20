@@ -229,10 +229,19 @@ class PatchWindowsSettings(ISessionHandler):
     async def _patch(self, _: Path) -> None:
         return None
 
+    async def on_idle(self, ctx):
+        return await super().on_idle(ctx)
+
     async def on_session_start(self, ctx: SessionHandlerContext) -> None:
-        tasks = (create_task(self._apply_reg_patch(ctx, patch)) for patch in self._get_patches())
+        tasks = [create_task(self._apply_reg_patch(ctx, patch)) for patch in self._get_patches()]
         await wait(tasks)
 
         await ctx.ssh.run("gpupdate /target:user /force", check=True)
         await sleep(1)
         await ctx.ssh.run(str(PsExec(command="explorer.exe")), check=False)
+
+    async def on_session_active(self, ctx):
+        return await super().on_session_active(ctx)
+
+    async def on_session_end(self, ctx):
+        return await super().on_session_end(ctx)

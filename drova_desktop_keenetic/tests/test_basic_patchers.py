@@ -7,7 +7,17 @@ def test_registered():
 
     @patcher
     class SimplePath(ISessionHandler):  # pylint: disable=W0612
-        pass
+        async def on_idle(self, ctx):
+            return await super().on_idle(ctx)
+
+        async def on_session_start(self, ctx):
+            return await super().on_session_start(ctx)
+
+        async def on_session_active(self, ctx):
+            return await super().on_session_active(ctx)
+
+        async def on_session_end(self, ctx):
+            return await super().on_session_end(ctx)
 
     with pytest.raises(RuntimeError):
 

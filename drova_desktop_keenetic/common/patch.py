@@ -72,3 +72,9 @@ def patcher(cls: type[ISessionHandler]) -> type[ISessionHandler]:
 
 def make_patchers() -> list[ISessionHandler]:
     return [patcher() for patcher in _ALL_PATCHES]
+
+
+def load_patchers():
+    from drova_desktop_keenetic.patches.basic import logger
+
+    logger.info("load basic patchers")
