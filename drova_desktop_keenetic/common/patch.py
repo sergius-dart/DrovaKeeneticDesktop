@@ -1,24 +1,17 @@
 import logging
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
 from pathlib import Path, PureWindowsPath
 
 from aiofiles.tempfile import NamedTemporaryFile
-from asyncssh import SFTPClient, SSHClientConnection
 
 from drova_desktop_keenetic.common.commands import (
     TaskKill,
 )
+from drova_desktop_keenetic.common.context import SessionHandlerContext
 
 logger = logging.getLogger(__name__)
 
 _ALL_PATCHES = []
-
-
-@dataclass
-class SessionHandlerContext:
-    ssh: SSHClientConnection
-    sftp: SFTPClient
 
 
 class ISessionHandler(ABC):

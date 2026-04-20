@@ -107,6 +107,7 @@ class ShadowDefenderCLI(ICommandBuilder):
     password: str
     actions: list[Literal["enter", "exit", "reboot", "commit", "list"]]
     drives: str | None = None
+    now: bool = True
 
     def _build_command(self) -> str:
         command = [quote(r"C:\Program Files\Shadow Defender\CmdTool.exe")]
@@ -126,7 +127,8 @@ class ShadowDefenderCLI(ICommandBuilder):
                     command += [f'/commit:"{drive}:\\"' for drive in self.drives.split("")]
                 case "list":
                     command += ["/list"]
-        command += ["/now"]
+        if self.now:
+            command += ["/now"]
         return " ".join(command)
 
 
@@ -209,3 +211,21 @@ class WmicGetLocalDrives(ICommandBuilder):
                 continue
             result.append(line[0])
         return result
+
+
+@dataclass
+class Shutdown(ICommandBuilder):
+    actions: Literal["reboot", "shutdown"]
+    timeout: int = 0
+
+    def _build_command(self):
+        command = ["shutdown"]
+        match self.actions:
+            case "reboot":
+                command.append("/r")
+            case "shutdown":
+                command.append("/s")
+        command.append("/t")
+        command.append("0")
+
+        return " ".join(command)
