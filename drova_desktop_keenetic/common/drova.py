@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime
 from enum import StrEnum
 from ipaddress import IPv4Address
@@ -24,9 +25,9 @@ class StatusEnum(StrEnum):
 
 
 class SessionsEntity(BaseModel):
-    uuid: UUID4
-    product_id: UUID4
-    client_id: UUID4
+    uuid: UUID
+    product_id: UUID
+    client_id: UUID
     created_on: datetime
     finished_on: datetime | None = None
     status: StatusEnum
@@ -39,12 +40,12 @@ class SessionsEntity(BaseModel):
 
 
 class SessionsResponse(BaseModel):
-    sessions: list[SessionsEntity]
+    sessions: list[SessionsEntity] | None
 
 
 class ProductInfo(BaseModel):
     model_config = ConfigDict(extra="allow")  # todo add full
-    product_id: UUID4
+    product_id: UUID
     game_path: PureWindowsPath = PureWindowsPath("C:/")
     work_path: PureWindowsPath = PureWindowsPath("C:/")
     args: str = ""
@@ -53,6 +54,7 @@ class ProductInfo(BaseModel):
 
 
 class DrovaService:
+    logger = logging.getLogger(__file__)
     URL_SESSIONS = "{host}/session-manager/sessions?"
     URL_PRODUCT = "{host}/server-manager/product/get/{product_id}"
 
@@ -136,7 +138,10 @@ class FakeDrova:
         self._runner = None
 
     async def _get_session(self, _: web.Request):
-        return web.json_response(self.session.model_dump(mode="json"))
+        if self.session:
+            return web.json_response(self.session.model_dump(mode="json"))
+
+        return web.json_response({"sessions": []})
 
     async def _get_product(self, _: web.Request):
         return web.json_response(self.product.model_dump(mode="json"))
