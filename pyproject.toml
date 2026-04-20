@@ -66,4 +66,5 @@ disable = [
     "C0115",  # Missing class docstring
     "C0116",  # Missing function or method docstring
     "W1203",  # lazy formatting in logging
+    "W0621",  # redefenition on tests(fixtures)
 ]

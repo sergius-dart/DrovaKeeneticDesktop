@@ -2,7 +2,11 @@ import logging
 from enum import Enum
 
 from drova_desktop_keenetic.common.drova import StatusEnum
-from drova_desktop_keenetic.common.patch import SessionHandlerContext, make_patchers
+from drova_desktop_keenetic.common.patch import (
+    ISessionHandler,
+    SessionHandlerContext,
+    make_patchers,
+)
 
 
 class SessionState(Enum):
@@ -26,12 +30,12 @@ class SessionState(Enum):
 class DrovaSessionTransition:
     logger = logging.getLogger(__file__)
 
-    def __init__(self, status: StatusEnum | None):
+    def __init__(self, status: StatusEnum | None, protector: ISessionHandler):
         self._state: SessionState = SessionState.from_status_enum(status)
         self._patchers = make_patchers()
-        self._ctx = SessionHandlerContext(ssh=None, sftp=None)
+        self._protector = protector
 
-    async def set_status(self, new_status: StatusEnum | None):
+    async def set_status(self, new_status: StatusEnum | None, ctx: SessionHandlerContext):
         old_state = self._state
         self._state = SessionState.from_status_enum(new_status)
 
@@ -41,45 +45,51 @@ class DrovaSessionTransition:
 
         self.logger.info("Session transition from %s to %s", old_state, self._state)
 
+        task_protect = None
         task = None
         match self._state:
             case SessionState.NONE_SESSION:
-                task = self._on_idle()
+                task_protect = self._protector.on_idle(ctx)
+                task = self._on_idle(ctx)
             case SessionState.SESSION_START:
-                task = self._on_session_start()
+                task_protect = self._protector.on_session_start(ctx)
+                task = self._on_session_start(ctx)
             case SessionState.SESSION_ACTIVE:
-                task = self._on_session_active()
+                task_protect = self._protector.on_session_active(ctx)
+                task = self._on_session_active(ctx)
             case SessionState.SESSION_END:
-                task = self._on_session_end()
+                task_protect = self._protector.on_session_end(ctx)
+                task = self._on_session_end(ctx)
 
-        if task:
+        if task and task_protect:
             self.logger.debug("Call task to execute %s", task)
+            await task_protect
             await task
 
-    async def _on_idle(self):
+    async def _on_idle(self, ctx: SessionHandlerContext):
         for patch in self._patchers:
             try:
-                await patch.on_idle(self._ctx)
+                await patch.on_idle(ctx)
             except Exception as exc:  # pylint: disable=W0718
                 self.logger.error(exc)
 
-    async def _on_session_start(self):
+    async def _on_session_start(self, ctx: SessionHandlerContext):
         for patch in self._patchers:
             try:
-                await patch.on_session_start(self._ctx)
+                await patch.on_session_start(ctx)
             except Exception as exc:  # pylint: disable=W0718
                 self.logger.error(exc)
 
-    async def _on_session_active(self):
+    async def _on_session_active(self, ctx: SessionHandlerContext):
         for patch in self._patchers:
             try:
-                await patch.on_session_active(self._ctx)
+                await patch.on_session_active(ctx)
             except Exception as exc:  # pylint: disable=W0718
                 self.logger.error(exc)
 
-    async def _on_session_end(self):
+    async def _on_session_end(self, ctx: SessionHandlerContext):
         for patch in self._patchers:
             try:
-                await patch.on_session_end(self._ctx)
+                await patch.on_session_end(ctx)
             except Exception as exc:  # pylint: disable=W0718
                 self.logger.error(exc)
