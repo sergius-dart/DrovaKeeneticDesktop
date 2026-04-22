@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 from pathlib import Path, PureWindowsPath
 
 from aiofiles.tempfile import NamedTemporaryFile
+from asyncssh import SFTPNoSuchFile
 
 from drova_desktop_keenetic.common.commands import (
     TaskKill,
@@ -54,7 +55,12 @@ class IPatch(ISessionHandler):
     async def on_session_start(self, ctx: SessionHandlerContext):
         if self.TASKKILL_IMAGE:
             await ctx.ssh.run(str(TaskKill(image=self.TASKKILL_IMAGE)))
-        return await self.patch(ctx)
+        try:
+            return await self.patch(ctx)
+        except SFTPNoSuchFile:
+            self.logger.exception(f"Not found file to patch {self.NAME}: {self.remote_file_location}")
+        except Exception :
+            self.logger.exception(f"Error on apply patcher {self.NAME}")
 
     async def on_session_active(self, ctx: SessionHandlerContext):
         pass
