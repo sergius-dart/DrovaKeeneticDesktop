@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "drova_keenetic_desktop"
-version = "0.1.0"
+version = "0.2.0"
 description = ""
 authors = ["sergius-dart <sergius-dart@yandex.ru>"]
 readme = "README.md"

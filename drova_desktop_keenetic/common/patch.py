@@ -58,9 +58,9 @@ class IPatch(ISessionHandler):
         try:
             return await self.patch(ctx)
         except SFTPNoSuchFile:
-            self.logger.exception(f"Not found file to patch {self.NAME}: {self.remote_file_location}")
-        except Exception :
-            self.logger.exception(f"Error on apply patcher {self.NAME}")
+            logger.exception(f"Not found file to patch {self.NAME}: {self.remote_file_location}")
+        except Exception:  # pylint: disable=W0718
+            logger.exception(f"Error on apply patcher {self.NAME}")
 
     async def on_session_active(self, ctx: SessionHandlerContext):
         pass
