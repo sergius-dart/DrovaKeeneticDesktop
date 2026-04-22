@@ -5,8 +5,6 @@ from asyncssh import connect as connect_ssh
 
 from drova_desktop_keenetic.common.commands import PsExec, ShadowDefenderCLI
 from drova_desktop_keenetic.common.contants import (
-    DROVA_SOCKET_LISTEN,
-    SHADOW_DEFENDER_DRIVES,
     SHADOW_DEFENDER_PASSWORD,
     WINDOWS_HOST,
     WINDOWS_LOGIN,
@@ -15,12 +13,10 @@ from drova_desktop_keenetic.common.contants import (
 
 
 def validate_env():
-    assert not hasattr(os.environ, DROVA_SOCKET_LISTEN), "Please set DROVA_SOCKET_LISTEN in .env file"
     assert not hasattr(os.environ, WINDOWS_HOST), "Please set WINDOWS_HOST in .env file"
     assert not hasattr(os.environ, WINDOWS_LOGIN), "Please set WINDOWS_LOGIN in .env file"
 
     assert not hasattr(os.environ, SHADOW_DEFENDER_PASSWORD), "Please set SHADOW_DEFENDER_PASSWORD in .env file"
-    assert not hasattr(os.environ, SHADOW_DEFENDER_DRIVES), "Please set SHADOW_DEFENDER_DRIVES in .env file"
 
 
 async def validate_creds():
