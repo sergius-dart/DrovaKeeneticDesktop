@@ -44,7 +44,7 @@ class EpicGamesAuthDiscard(IPatch):
         with open(file, "w", encoding="utf8") as f:
             config.write(f)
         for file_dat in await ctx.sftp.glob(self.remote_file_location.parent / "*.dat"):
-            self.logger.info(f"Remove file {file_dat}")
+            self.logger.info("Remove file %s", file_dat)
             await ctx.sftp.remove(file_dat)
 
 
@@ -155,7 +155,7 @@ class PatchWindowsSettings(ISessionHandler):
     )
 
     explorer_path = r"HKCU\Software\Microsoft\Windows\CurrentVersion\Policies\Explorer"
-    disallow_run_path = fr"{explorer_path}\DisallowRun"
+    disallow_run_path = rf"{explorer_path}\DisallowRun"
     disable_poweroff = RegistryPatch(
         reg_directory=explorer_path, value_name="NoClose", value_type=RegValueType.REG_DWORD, value=1
     )
@@ -217,7 +217,10 @@ class PatchWindowsSettings(ISessionHandler):
     def disable_application(self) -> Generator[RegistryPatch, None, None]:
         for app_index, app in enumerate(self.blocked_applications):
             yield RegistryPatch(
-                reg_directory=self.disallow_run_path, value_name=f"{app_index}", value_type=RegValueType.REG_SZ, value=app
+                reg_directory=self.disallow_run_path,
+                value_name=f"{app_index}",
+                value_type=RegValueType.REG_SZ,
+                value=app,
             )
 
     def _get_patches(self):
@@ -240,24 +243,23 @@ class PatchWindowsSettings(ISessionHandler):
         try:
             self.logger.info(f"Run {str(RegAdd(patch.reg_directory))}")
             await ctx.ssh.run(str(RegAdd(patch.reg_directory)), check=True)
-            self.logger.info(
-                f"Run {str(RegAdd(patch.reg_directory, value_name=patch.value_name, value_type=patch.value_type, value=patch.value))}"  # pylint: disable=C0301
+            command_patch = RegAdd(
+                patch.reg_directory, value_name=patch.value_name, value_type=patch.value_type, value=patch.value
             )
+            self.logger.info(f"Run {str(command_patch)}")  # pylint: disable=C0301
             await ctx.ssh.run(
-                str(
-                    RegAdd(patch.reg_directory, value_name=patch.value_name, value_type=patch.value_type, value=patch.value)
-                ),
+                str(command_patch),
                 check=True,
             )
         except ChannelOpenError:
-            self.logger.exception(f"Bad settings ssh - don't apply {str(RegAdd(patch.reg_directory, value_name=patch.value_name, value_type=patch.value_type, value=patch.value))}")
+            self.logger.exception(f"Bad settings ssh - don't apply {str(command_patch)}")
 
         except ProcessError as e:
             self.logger.error(
-                f"Command : r{str(RegAdd(patch.reg_directory, value_name=patch.value_name, value_type=patch.value_type, value=patch.value))}: return code {e.returncode}. "
+                f"Command : r{str(command_patch)}:"
+                f" return code {e.returncode}. "
                 f"stdout: {e.stdout!r}, stderr: {e.stderr!r}"
             )
-
 
     async def on_idle(self, ctx):
         return await super().on_idle(ctx)
