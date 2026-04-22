@@ -10,6 +10,7 @@ from drova_desktop_keenetic.common.commands import (
     PsExec,
     RegAdd,
     RegValueType,
+    TaskKill,
 )
 from drova_desktop_keenetic.common.patch import (
     IPatch,
@@ -41,6 +42,9 @@ class EpicGamesAuthDiscard(IPatch):
         self.logger.info("Write without auth section")
         with open(file, "w", encoding="utf8") as f:
             config.write(f)
+        for file_dat in await ctx.sftp.glob(self.remote_file_location.parent / "*.dat"):
+            self.logger.info(f"Remove file {file_dat}")
+            await ctx.sftp.remove(file_dat)
 
 
 @patcher
@@ -61,7 +65,7 @@ class SteamAuthDiscard(IPatch):
 
 
 @patcher
-class UbisoftAuthDiscard(IPatch):
+class UbisoftAuthDiscard(ISessionHandler):
     logger = logger.getChild("UbisoftAuthDiscard")
     NAME = "ubisoft"
     TASKKILL_IMAGE = "upc.exe"
@@ -71,32 +75,50 @@ class UbisoftAuthDiscard(IPatch):
         r"AppData\Local\Ubisoft Game Launcher\user.dat",
     )
 
-    async def _patch(self, _: Path, ctx: SessionHandlerContext) -> None:
-        return None
+    async def on_idle(self, ctx):
+        return await super().on_idle(ctx)
 
-    async def patch(self, ctx: SessionHandlerContext) -> None:
+    async def on_session_start(self, ctx: SessionHandlerContext) -> None:
+        if self.TASKKILL_IMAGE:
+            await ctx.ssh.run(str(TaskKill(image=self.TASKKILL_IMAGE)))
+
         for file in self.to_remove:
             if await ctx.sftp.exists(file):
                 self.logger.info(f"Remove file {file}")
                 await ctx.sftp.remove(PureWindowsPath(file))
 
+    async def on_session_active(self, ctx):
+        return await super().on_session_active(ctx)
+
+    async def on_session_end(self, ctx):
+        return await super().on_session_end(ctx)
+
 
 @patcher
-class WargamingAuthDiscard(IPatch):
+class WargamingAuthDiscard(ISessionHandler):
     logger = logger.getChild("WargamingAuthDiscard")
     NAME = "wargaming"
     TASKKILL_IMAGE = "wgc.exe"
 
     to_remove = (r"AppData\Roaming\Wargaming.net\GameCenter\user_info.xml",)
 
-    async def _patch(self, _: Path, ctx: SessionHandlerContext) -> None:
-        return None
+    async def on_idle(self, ctx):
+        return await super().on_idle(ctx)
 
-    async def patch(self, ctx: SessionHandlerContext) -> None:
+    async def on_session_start(self, ctx: SessionHandlerContext) -> None:
+        if self.TASKKILL_IMAGE:
+            await ctx.ssh.run(str(TaskKill(image=self.TASKKILL_IMAGE)))
+
         for file in self.to_remove:
             if await ctx.sftp.exists(file):
                 self.logger.info(f"Remove file {file}")
                 await ctx.sftp.remove(PureWindowsPath(file))
+
+    async def on_session_active(self, ctx):
+        return await super().on_session_active(ctx)
+
+    async def on_session_end(self, ctx):
+        return await super().on_session_end(ctx)
 
 
 class RegistryPatch(BaseModel):

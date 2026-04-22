@@ -67,4 +67,6 @@ disable = [
     "C0116",  # Missing function or method docstring
     "W1203",  # lazy formatting in logging
     "W0621",  # redefenition on tests(fixtures)
+    "R0401",  # cyclic import for patchers
+    "C0415",  # dynamic import from outside top level
 ]
