@@ -4,6 +4,7 @@ from configparser import ConfigParser
 from pathlib import Path, PureWindowsPath
 from typing import Generator
 
+from asyncssh import ChannelOpenError, ProcessError
 from pydantic import BaseModel
 
 from drova_desktop_keenetic.common.commands import (
@@ -154,6 +155,7 @@ class PatchWindowsSettings(ISessionHandler):
     )
 
     explorer_path = r"HKCU\Software\Microsoft\Windows\CurrentVersion\Policies\Explorer"
+    disallow_run_path = fr"{explorer_path}\DisallowRun"
     disable_poweroff = RegistryPatch(
         reg_directory=explorer_path, value_name="NoClose", value_type=RegValueType.REG_DWORD, value=1
     )
@@ -215,7 +217,7 @@ class PatchWindowsSettings(ISessionHandler):
     def disable_application(self) -> Generator[RegistryPatch, None, None]:
         for app_index, app in enumerate(self.blocked_applications):
             yield RegistryPatch(
-                reg_directory=self.explorer_path, value_name=f"{app_index}", value_type=RegValueType.REG_SZ, value=app
+                reg_directory=self.disallow_run_path, value_name=f"{app_index}", value_type=RegValueType.REG_SZ, value=app
             )
 
     def _get_patches(self):
@@ -235,21 +237,27 @@ class PatchWindowsSettings(ISessionHandler):
         )
 
     async def _apply_reg_patch(self, ctx: SessionHandlerContext, patch: RegistryPatch) -> None:
-        self.logger.info(f"Run {str(RegAdd(patch.reg_directory))}")
-        await ctx.ssh.run(str(RegAdd(patch.reg_directory)), check=True)
-        self.logger.info(
-            f"Run {str(RegAdd(patch.reg_directory, value_name=patch.value_name, value_type=patch.value_type, value=patch.value))}"  # pylint: disable=C0301
-        )
-        await ctx.ssh.run(
-            str(
-                RegAdd(patch.reg_directory, value_name=patch.value_name, value_type=patch.value_type, value=patch.value)
-            ),
-            check=True,
-        )
-        return None
+        try:
+            self.logger.info(f"Run {str(RegAdd(patch.reg_directory))}")
+            await ctx.ssh.run(str(RegAdd(patch.reg_directory)), check=True)
+            self.logger.info(
+                f"Run {str(RegAdd(patch.reg_directory, value_name=patch.value_name, value_type=patch.value_type, value=patch.value))}"  # pylint: disable=C0301
+            )
+            await ctx.ssh.run(
+                str(
+                    RegAdd(patch.reg_directory, value_name=patch.value_name, value_type=patch.value_type, value=patch.value)
+                ),
+                check=True,
+            )
+        except ChannelOpenError:
+            self.logger.exception(f"Bad settings ssh - don't apply {str(RegAdd(patch.reg_directory, value_name=patch.value_name, value_type=patch.value_type, value=patch.value))}")
 
-    async def _patch(self, _: Path) -> None:
-        return None
+        except ProcessError as e:
+            self.logger.error(
+                f"Command : r{str(RegAdd(patch.reg_directory, value_name=patch.value_name, value_type=patch.value_type, value=patch.value))}: return code {e.returncode}. "
+                f"stdout: {e.stdout!r}, stderr: {e.stderr!r}"
+            )
+
 
     async def on_idle(self, ctx):
         return await super().on_idle(ctx)
