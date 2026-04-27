@@ -204,9 +204,17 @@ class WmicGetLocalDrives(ICommandBuilder):
         return "wmic logicaldisk where drivetype=3 get name"
 
     @staticmethod
-    def parse(output: str):
-        result = []
-        for line in output.split("\n")[1:]:
+    def parse(output: bytes | str | None) -> list[str]:
+        if not output:
+            return []
+        realoutput: str | None = None
+        if isinstance(output, bytes):
+            realoutput = output.decode()
+        elif isinstance(output, str):
+            realoutput = output
+        assert realoutput
+        result: list[str] = []
+        for line in realoutput.split("\n")[1:]:
             if not line:
                 continue
             result.append(line[0])

@@ -34,6 +34,8 @@ class EpicGamesAuthDiscard(IPatch):
     )
 
     async def _patch(self, file: Path, ctx: SessionHandlerContext) -> None:
+        assert ctx.ssh
+        assert ctx.sftp
         config = ConfigParser(strict=False)
         self.logger.info("read GameUserSettings.ini")
         config.read(file, encoding="UTF-8")
@@ -76,10 +78,12 @@ class UbisoftAuthDiscard(ISessionHandler):
         r"AppData\Local\Ubisoft Game Launcher\user.dat",
     )
 
-    async def on_idle(self, ctx):
-        return await super().on_idle(ctx)
+    async def on_idle(self, ctx: SessionHandlerContext):
+        return None
 
     async def on_session_start(self, ctx: SessionHandlerContext) -> None:
+        assert ctx.ssh
+        assert ctx.sftp
         if self.TASKKILL_IMAGE:
             await ctx.ssh.run(str(TaskKill(image=self.TASKKILL_IMAGE)))
 
@@ -88,11 +92,11 @@ class UbisoftAuthDiscard(ISessionHandler):
                 self.logger.info(f"Remove file {file}")
                 await ctx.sftp.remove(PureWindowsPath(file))
 
-    async def on_session_active(self, ctx):
-        return await super().on_session_active(ctx)
+    async def on_session_active(self, ctx: SessionHandlerContext):
+        return None
 
-    async def on_session_end(self, ctx):
-        return await super().on_session_end(ctx)
+    async def on_session_end(self, ctx: SessionHandlerContext):
+        return None
 
 
 @patcher
@@ -103,10 +107,12 @@ class WargamingAuthDiscard(ISessionHandler):
 
     to_remove = (r"AppData\Roaming\Wargaming.net\GameCenter\user_info.xml",)
 
-    async def on_idle(self, ctx):
-        return await super().on_idle(ctx)
+    async def on_idle(self, ctx: SessionHandlerContext):
+        return None
 
     async def on_session_start(self, ctx: SessionHandlerContext) -> None:
+        assert ctx.ssh
+        assert ctx.sftp
         if self.TASKKILL_IMAGE:
             await ctx.ssh.run(str(TaskKill(image=self.TASKKILL_IMAGE)))
 
@@ -115,11 +121,11 @@ class WargamingAuthDiscard(ISessionHandler):
                 self.logger.info(f"Remove file {file}")
                 await ctx.sftp.remove(PureWindowsPath(file))
 
-    async def on_session_active(self, ctx):
-        return await super().on_session_active(ctx)
+    async def on_session_active(self, ctx: SessionHandlerContext):
+        return None
 
-    async def on_session_end(self, ctx):
-        return await super().on_session_end(ctx)
+    async def on_session_end(self, ctx: SessionHandlerContext):
+        return None
 
 
 class RegistryPatch(BaseModel):
@@ -240,12 +246,15 @@ class PatchWindowsSettings(ISessionHandler):
         )
 
     async def _apply_reg_patch(self, ctx: SessionHandlerContext, patch: RegistryPatch) -> None:
+        assert ctx.ssh
+        command_patch = RegAdd(
+            patch.reg_directory, value_name=patch.value_name, value_type=patch.value_type, value=patch.value
+        )
         try:
             self.logger.info(f"Run {str(RegAdd(patch.reg_directory))}")
+
             await ctx.ssh.run(str(RegAdd(patch.reg_directory)), check=True)
-            command_patch = RegAdd(
-                patch.reg_directory, value_name=patch.value_name, value_type=patch.value_type, value=patch.value
-            )
+
             self.logger.info(f"Run {str(command_patch)}")  # pylint: disable=C0301
             await ctx.ssh.run(
                 str(command_patch),
@@ -261,10 +270,11 @@ class PatchWindowsSettings(ISessionHandler):
                 f"stdout: {e.stdout!r}, stderr: {e.stderr!r}"
             )
 
-    async def on_idle(self, ctx):
-        return await super().on_idle(ctx)
+    async def on_idle(self, ctx: SessionHandlerContext):
+        return None
 
     async def on_session_start(self, ctx: SessionHandlerContext) -> None:
+        assert ctx.ssh
         tasks = [create_task(self._apply_reg_patch(ctx, patch)) for patch in self._get_patches()]
         await wait(tasks)
 
@@ -272,8 +282,8 @@ class PatchWindowsSettings(ISessionHandler):
         await sleep(1)
         await ctx.ssh.run(str(PsExec(command="explorer.exe")), check=False)
 
-    async def on_session_active(self, ctx):
-        return await super().on_session_active(ctx)
+    async def on_session_active(self, ctx: SessionHandlerContext):
+        return None
 
-    async def on_session_end(self, ctx):
-        return await super().on_session_end(ctx)
+    async def on_session_end(self, ctx: SessionHandlerContext):
+        return None

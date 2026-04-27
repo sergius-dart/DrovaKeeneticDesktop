@@ -1,6 +1,7 @@
 import logging
 from abc import ABC, abstractmethod
 from pathlib import Path, PureWindowsPath
+from typing import Any
 
 from aiofiles.tempfile import NamedTemporaryFile
 from asyncssh import SFTPNoSuchFile
@@ -11,8 +12,6 @@ from drova_desktop_keenetic.common.commands import (
 from drova_desktop_keenetic.common.context import SessionHandlerContext
 
 logger = logging.getLogger(__name__)
-
-_ALL_PATCHES = []
 
 
 class ISessionHandler(ABC):
@@ -43,6 +42,8 @@ class IPatch(ISessionHandler):
     async def _patch(self, file: Path, ctx: SessionHandlerContext) -> None: ...
 
     async def patch(self, ctx: SessionHandlerContext) -> None:
+        assert ctx.ssh
+        assert ctx.sftp
         async with NamedTemporaryFile("ab") as temp_file:
             await temp_file.close()
             await ctx.sftp.get(str(self.remote_file_location), str(temp_file.name))
@@ -53,6 +54,7 @@ class IPatch(ISessionHandler):
         pass
 
     async def on_session_start(self, ctx: SessionHandlerContext):
+        assert ctx.ssh
         if self.TASKKILL_IMAGE:
             await ctx.ssh.run(str(TaskKill(image=self.TASKKILL_IMAGE)))
         try:
@@ -69,7 +71,7 @@ class IPatch(ISessionHandler):
         return None
 
 
-def patcher(cls: type[ISessionHandler]) -> type[ISessionHandler]:
+def patcher(cls: Any) -> type[ISessionHandler]:
     if not issubclass(cls, ISessionHandler):
         raise RuntimeError("Please implement basic ISessionHandler/IPatch class")
     _ALL_PATCHES.append(cls)
@@ -84,3 +86,6 @@ def load_patchers():
     from drova_desktop_keenetic.patches.basic import logger
 
     logger.info("load basic patchers")
+
+
+_ALL_PATCHES: list[type[ISessionHandler]] = []
