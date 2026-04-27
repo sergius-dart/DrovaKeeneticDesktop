@@ -48,7 +48,8 @@ log_cli_level = 10
 
 [tool.mypy]
 exclude = [
-    "dist"
+    "dist",
+    "tests"
 ]
 
 [tool.isort]

@@ -208,3 +208,5 @@ downloaded/*
 deploy.sh
 
 *.env
+
+out

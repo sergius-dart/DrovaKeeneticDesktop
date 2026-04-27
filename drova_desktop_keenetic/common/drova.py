@@ -109,16 +109,16 @@ class FakeDrova:
         self._site: web.BaseSite | None = None
 
         self.session = SessionsResponse(
-            sessions=(
+            sessions=[
                 SessionsEntity(
                     uuid=SESSION_UUID_FAKE,
                     product_id=PRODUCT_UUID_BG3,
                     client_id=CLIENT_UUID_FAKE,
                     created_on=datetime.now(),
                     status=StatusEnum.NEW,
-                    creator_ip="127.0.0.1",
-                ),
-            )
+                    creator_ip=IPv4Address("127.0.0.1"),
+                )
+            ]
         )
         self.product = ProductInfo(product_id=PRODUCT_UUID_BG3)
 
@@ -133,6 +133,7 @@ class FakeDrova:
         await self._site.start()
 
     async def close(self):
+        assert self._runner
         await self._runner.cleanup()
         self._site = None
         self._runner = None

@@ -9,8 +9,8 @@ from drova_desktop_keenetic.common.drova import ProductInfo, SessionsEntity
 @dataclass
 class SessionHandlerContext:
     config: Config
-    ssh: SSHClientConnection
-    sftp: SFTPClient
+    ssh: SSHClientConnection | None
+    sftp: SFTPClient | None
 
     session: SessionsEntity | None = None
     product: ProductInfo | None = None

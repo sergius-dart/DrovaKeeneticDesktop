@@ -1,0 +1,58 @@
+name: Build Installer
+
+on:
+  push:
+    branches: [ main, master ]
+    tags:
+      - 'v*'
+  pull_request:
+    branches: [ dev, master ]
+  workflow_dispatch:  # Allows manual trigger
+
+jobs:
+  build:
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Install Inno Setup
+      run: |
+        # Download Inno Setup 6 Unicode
+        $url = "https://jrsoftware.org/download.php/is.exe"
+        $output = "$env:TEMP\innosetup.exe"
+        Invoke-WebRequest -Uri $url -OutFile $output
+        
+        # Silent install
+        Start-Process -FilePath $output -ArgumentList '/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP-' -Wait -NoNewWindow
+        
+        # Verify installation
+        if (Test-Path "C:\Program Files (x86)\Inno Setup 6\ISCC.exe") {
+          Write-Host "Inno Setup installed successfully"
+        } else {
+          Write-Host "Inno Setup installation failed"
+          exit 1
+        }
+      shell: powershell
+
+    - name: Compile Inno Setup script
+      run: |
+        $ISCC = "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
+        & $ISCC "installer\drovadesktop.iss"
+      shell: powershell
+    
+    - name: List output files
+      run: |
+        Write-Host "Output files:"
+        Get-ChildItem -Path "installer\out\" -Recurse | ForEach-Object {
+          Write-Host "  $($_.FullName)"
+        }
+      shell: powershell
+
+    - name: Upload installer artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: DrovaDesktop-Installer
+        path: installer\out\*.exe
+        if-no-files-found: error
