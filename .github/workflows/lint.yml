@@ -41,6 +41,10 @@ jobs:
     - name: Lint with pylint
       run: |
         poetry run pylint drova_desktop_keenetic
+
+    - name: Lint with mypy
+      run: |
+        poetry run mypy drova_desktop_keenetic
     
     - name: Upload pylint report
       if: always()

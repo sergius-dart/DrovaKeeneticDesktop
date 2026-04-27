@@ -11,7 +11,7 @@ from drova_desktop_keenetic.common.patch import (
 
 
 class SessionState(Enum):
-    NONE_SESSION = frozenset({})  # idle session
+    NONE_SESSION = frozenset({0})  # idle session
     SESSION_START = frozenset({StatusEnum.NEW, StatusEnum.HANDSHAKE})
     SESSION_ACTIVE = frozenset({StatusEnum.ACTIVE})
     SESSION_END = frozenset({StatusEnum.ABORTED, StatusEnum.FINISHED})
@@ -74,6 +74,9 @@ class DrovaSessionTransition:
             case SessionState.SESSION_END | SessionState.SESSION_FORCE_CLOSE:
                 task_protect = self._protector.on_session_end(ctx)
                 task = self._on_session_end(ctx)
+            case _:
+                task_protect = None
+                task = None
 
         self.logger.debug("Call task to execute %s", task)
         if task_protect:

@@ -1,5 +1,6 @@
 import asyncio
 import logging
+from typing import OrderedDict
 
 from asyncssh import SSHClientConnection
 from asyncssh import connect as connect_ssh
@@ -31,7 +32,7 @@ class DrovaPoll:
     def __init__(self, config: Config = Config()):
         self.stop_future = asyncio.get_event_loop().create_future()
 
-        self.dict_store = ExpiringDict(max_len=100, max_age_seconds=60)
+        self.dict_store: OrderedDict[str, str] = ExpiringDict(max_len=100, max_age_seconds=60)
         self._dict_store_lock = asyncio.Lock()
 
         self.drova_service = DrovaService()
@@ -116,6 +117,8 @@ class DrovaPoll:
                             await asyncio.sleep(1)
                     except RebootRequired:
                         self.logger.info("Reboot required received!")
+                        # simply finished/aborted not start reboot - need active->finished
+                        await self.drova_transition.set_status(StatusEnum.ACTIVE, self.ctx)
                         await self.drova_transition.set_status(StatusEnum.ABORTED, self.ctx)
                         await self.drova_transition.set_status(None, self.ctx)
                         # not return because tranition call reboot - and connection is closed automaticly
@@ -129,7 +132,7 @@ class DrovaPoll:
     async def stop(self) -> None:
         self.stop_future.set_result(True)
 
-    async def serve(self, wait_forever=False):
+    async def serve(self, wait_forever: bool = False):
         if wait_forever:
             await self.polling()
         else:
