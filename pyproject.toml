@@ -9,6 +9,7 @@ packages = [{include = "drova_desktop_keenetic"}]
 [tool.poetry.scripts]
 drova_validate = "drova_desktop_keenetic.bin.drova_validate:main"
 drova_poll = "drova_desktop_keenetic.bin.drova_poll:run_async_main"
+drova_test_poll = "drova_desktop_keenetic.bin.drova_test_poll:run_async_main"
 
 [tool.poetry.dependencies]
 python = "^3.11"
@@ -51,6 +52,7 @@ exclude = [
     "dist",
     "tests"
 ]
+check_untyped_defs = true
 
 [tool.isort]
 profile = "black"
@@ -68,6 +70,5 @@ disable = [
     "C0116",  # Missing function or method docstring
     "W1203",  # lazy formatting in logging
     "W0621",  # redefenition on tests(fixtures)
-    "R0401",  # cyclic import for patchers
     "C0415",  # dynamic import from outside top level
 ]

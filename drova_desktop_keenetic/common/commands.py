@@ -3,11 +3,12 @@ import re
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from enum import StrEnum
+from pathlib import PureWindowsPath
 from typing import Literal
 
 from mslex import quote
 
-from drova_desktop_keenetic.common.contants import WINDOWS_LOGIN, WINDOWS_PASSWORD
+from drova_desktop_keenetic.common.constants import WINDOWS_LOGIN, WINDOWS_PASSWORD
 
 
 class PsExecNotFoundExecutable(RuntimeError): ...
@@ -60,15 +61,15 @@ class PsExec(ICommandBuilder):
         return " ".join(command)
 
     @staticmethod
-    def parse_stderr_errror_code(stderr: bytes) -> int:
-        last_line = b""
-        for line in stderr.split(b"\r\n"):
+    def parse_stderr_errror_code(stderr: str) -> int:
+        last_line = ""
+        for line in stderr.split("\r\n"):
             if line:
                 last_line = line
 
         r = re.compile(r"(?P<executable>\S*) exited on (?P<hostname>\S*) with error code (?P<exit_code>\d+)\.")
 
-        if match := r.search(last_line.decode("windows-1251")):
+        if match := r.search(last_line):
             return int(match.group("exit_code") + "0")
 
         raise PsExecNotFoundExecutable()
@@ -138,19 +139,19 @@ class RegQueryEsme(ICommandBuilder):
         return " ".join(("reg", "query", r"HKEY_LOCAL_MACHINE\SOFTWARE\ITKey\Esme\servers", "/s", "/f", "auth_token"))
 
     @staticmethod
-    def parse_auth_code(stdout: bytes) -> tuple[str, str]:
+    def parse_auth_code(stdout: str) -> tuple[str, str]:
         r_auth_token = re.compile(r"auth_token\s+REG_SZ\s+(?P<auth_token>\S+)", re.MULTILINE)
 
         r_servers = re.compile(r"servers\\(?P<server_id>\S+)", re.MULTILINE)
 
-        matches_auth_token = r_auth_token.findall(stdout.decode("windows-1251"))
+        matches_auth_token = r_auth_token.findall(stdout)
         if not matches_auth_token:
             raise NotFoundAuthCode()
 
         if len(matches_auth_token) > 1:
             raise DuplicateAuthCode()
 
-        matches_server_id = r_servers.search(stdout.decode("windows-1251"))
+        matches_server_id = r_servers.search(stdout)
         if not matches_server_id:
             raise NotFoundAuthCode()
 
@@ -193,7 +194,7 @@ class RegAdd(ICommandBuilder):
 
         if self.value is not None:
             args.append("/d")
-            args.append(f"{self.value}")
+            args.append(str(self.value))
 
         return " ".join(args)
 
@@ -224,7 +225,7 @@ class WmicGetLocalDrives(ICommandBuilder):
 @dataclass
 class Shutdown(ICommandBuilder):
     actions: Literal["reboot", "shutdown"]
-    timeout: int = 0
+    timeout: int = 10
 
     def _build_command(self):
         command = ["shutdown"]
@@ -234,6 +235,15 @@ class Shutdown(ICommandBuilder):
             case "shutdown":
                 command.append("/s")
         command.append("/t")
-        command.append("0")
+        command.append(str(self.timeout))
 
         return " ".join(command)
+
+
+@dataclass
+class ObsStartStreaming(ICommandBuilder):
+    OBS_PATH = PureWindowsPath(r"C:\Program Files\obs-studio\bin\64bit\obs64.exe")
+    profile: str
+
+    def _build_command(self):
+        return " ".join((str(self.OBS_PATH.name), "--profile", self.profile, "--startstreaming", "--minimize-to-tray"))

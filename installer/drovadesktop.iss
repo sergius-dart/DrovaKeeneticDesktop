@@ -294,16 +294,16 @@ begin
   ConfigText := '# DrovaDesktop Configuration' + #13#10;
   ConfigText := ConfigText + '# ========================================' + #13#10#13#10;
   
-  ConfigText := ConfigText + 'DROVA_WINDOWS_HOST="' + ComputerIP + '"' + #13#10;
-  ConfigText := ConfigText + 'DROVA_WINDOWS_LOGIN="' + WindowsLogin + '"' + #13#10;
-  ConfigText := ConfigText + 'DROVA_WINDOWS_PASSWORD="' + WindowsPassword + '"' + #13#10#13#10;
+  ConfigText := ConfigText + 'WINDOWS_HOST="' + ComputerIP + '"' + #13#10;
+  ConfigText := ConfigText + 'WINDOWS_LOGIN="' + WindowsLogin + '"' + #13#10;
+  ConfigText := ConfigText + 'WINDOWS_PASSWORD="' + WindowsPassword + '"' + #13#10#13#10;
   
   if ShadowPassword <> '' then
-    ConfigText := ConfigText + 'DROVA_SHADOW_DEFENDER_PASSWORD="' + ShadowPassword + '"' + #13#10#13#10
+    ConfigText := ConfigText + 'SHADOW_DEFENDER_PASSWORD="' + ShadowPassword + '"' + #13#10#13#10
   else
-    ConfigText := ConfigText + '# DROVA_SHADOW_DEFENDER_PASSWORD= (not set)' + #13#10#13#10;
+    ConfigText := ConfigText + '# SHADOW_DEFENDER_PASSWORD= (not set)' + #13#10#13#10;
   
-  ConfigText := ConfigText + 'DROVA_OBS_REMOTE_URL=""' + #13#10;
+  ConfigText := ConfigText + 'OBS_REMOTE_URL=""' + #13#10;
   
   // Save to desktop
   ConfigFilePath := ExpandConstant('{userdesktop}\DrovaDesktop.env');

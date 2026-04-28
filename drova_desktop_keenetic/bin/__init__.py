@@ -2,7 +2,7 @@ import os
 from logging import DEBUG, INFO, StreamHandler, basicConfig
 from logging.handlers import RotatingFileHandler
 
-from drova_desktop_keenetic.common.contants import WINDOWS_HOST
+from drova_desktop_keenetic.common.constants import WINDOWS_HOST
 
 assert WINDOWS_HOST in os.environ, "Need windows host in config env"
 

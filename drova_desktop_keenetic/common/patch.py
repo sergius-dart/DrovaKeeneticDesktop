@@ -9,12 +9,16 @@ from asyncssh import SFTPNoSuchFile
 from drova_desktop_keenetic.common.commands import (
     TaskKill,
 )
+from drova_desktop_keenetic.common.config import Config
 from drova_desktop_keenetic.common.context import SessionHandlerContext
 
 logger = logging.getLogger(__name__)
 
 
 class ISessionHandler(ABC):
+    def __init__(self, config: Config):  # pylint: disable=W0613
+        return
+
     @abstractmethod
     async def on_idle(self, ctx: SessionHandlerContext):
         pass
@@ -60,7 +64,7 @@ class IPatch(ISessionHandler):
         try:
             return await self.patch(ctx)
         except SFTPNoSuchFile:
-            logger.exception(f"Not found file to patch {self.NAME}: {self.remote_file_location}")
+            logger.warning(f"Not found file to patch {self.NAME}: {self.remote_file_location}")
         except Exception:  # pylint: disable=W0718
             logger.exception(f"Error on apply patcher {self.NAME}")
 
@@ -78,14 +82,8 @@ def patcher(cls: Any) -> type[ISessionHandler]:
     return cls
 
 
-def make_patchers() -> list[ISessionHandler]:
-    return [patcher() for patcher in _ALL_PATCHES]
-
-
-def load_patchers():
-    from drova_desktop_keenetic.patches.basic import logger
-
-    logger.info("load basic patchers")
+def make_patchers(config: Config) -> list[ISessionHandler]:
+    return [patcher(config=config) for patcher in _ALL_PATCHES]
 
 
 _ALL_PATCHES: list[type[ISessionHandler]] = []

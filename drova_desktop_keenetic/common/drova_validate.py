@@ -4,12 +4,13 @@ from aiofiles.tempfile import NamedTemporaryFile
 from asyncssh import connect as connect_ssh
 
 from drova_desktop_keenetic.common.commands import PsExec, ShadowDefenderCLI
-from drova_desktop_keenetic.common.contants import (
+from drova_desktop_keenetic.common.constants import (
     SHADOW_DEFENDER_PASSWORD,
     WINDOWS_HOST,
     WINDOWS_LOGIN,
     WINDOWS_PASSWORD,
 )
+from drova_desktop_keenetic.common.helpers import to_str
 
 
 def validate_env():
@@ -28,20 +29,18 @@ async def validate_creds():
         encoding="windows-1251",
     ) as conn:
         print("Windows access complete!")
-        result_defender = await conn.run(str(ShadowDefenderCLI(os.environ[SHADOW_DEFENDER_PASSWORD], "list")))
-        assert "not correct" not in result_defender.stdout, "Bad Shadow Defender password!"
+        result_defender = await conn.run(
+            str(ShadowDefenderCLI(password=os.environ[SHADOW_DEFENDER_PASSWORD], actions=["list"]))
+        )
+        assert "not correct" not in to_str(result_defender.stdout, "windows-1251"), "Bad Shadow Defender password!"
         print("Shadow Defender list is ok!")
 
         async with NamedTemporaryFile() as f:
             async with conn.start_sftp_client() as sftp:
-                await sftp.get(r"C:\Windows\System32\drivers\etc\hosts", f.name)
+                await sftp.get(r"C:\Windows\System32\drivers\etc\hosts", str(f.name))
                 with open(f.name, "r", encoding="utf8") as local_f:
                     assert local_f.read()
                 print("sftp open")
 
         result_psexec = await conn.run(str(PsExec(r"cmd /c 'echo 1'", detach=False)))
-        PsExec.parse_stderr_errror_code(
-            result_psexec.stderr
-            if isinstance(result_psexec.stderr, bytes)
-            else result_psexec.stderr.encode("windows-1251")
-        )
+        PsExec.parse_stderr_errror_code(to_str(result_psexec.stderr, "windows-1251"))
