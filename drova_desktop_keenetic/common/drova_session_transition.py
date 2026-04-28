@@ -1,13 +1,20 @@
 import logging
 from enum import Enum
 
+from drova_desktop_keenetic.common.config import Config
 from drova_desktop_keenetic.common.drova import StatusEnum
 from drova_desktop_keenetic.common.patch import (
     ISessionHandler,
     SessionHandlerContext,
-    load_patchers,
     make_patchers,
 )
+
+
+def load_patchers():
+    import drova_desktop_keenetic.patches.obs  # pylint: disable=W0611
+    from drova_desktop_keenetic.patches.basic import logger
+
+    logger.info("load basic patchers")
 
 
 class SessionState(Enum):
@@ -33,10 +40,10 @@ class SessionState(Enum):
 class DrovaSessionTransition:
     logger = logging.getLogger(__file__)
 
-    def __init__(self, status: StatusEnum | None, protector: ISessionHandler):
+    def __init__(self, status: StatusEnum | None, protector: ISessionHandler, config: Config):
         self._state: SessionState = SessionState.from_status_enum(status)
         load_patchers()
-        self._patchers = make_patchers()
+        self._patchers = make_patchers(config)
         self._protector = protector
 
     async def set_status(self, new_status: StatusEnum | None, ctx: SessionHandlerContext):

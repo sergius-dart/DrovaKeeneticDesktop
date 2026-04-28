@@ -3,6 +3,7 @@ from unittest.mock import AsyncMock
 
 import pytest
 
+from drova_desktop_keenetic.common.config import Config
 from drova_desktop_keenetic.common.context import SessionHandlerContext
 from drova_desktop_keenetic.common.drova import StatusEnum
 from drova_desktop_keenetic.common.drova_session_transition import (
@@ -16,6 +17,7 @@ basicConfig(level=DEBUG)
 @pytest.fixture
 def fake_protector():
     class FakeProtector(ISessionHandler):
+
         async def on_idle(self, ctx):
             return await super().on_idle(ctx)
 
@@ -28,7 +30,7 @@ def fake_protector():
         async def on_session_end(self, ctx):
             return await super().on_session_end(ctx)
 
-    return FakeProtector()
+    return FakeProtector(Config())
 
 
 @pytest.mark.asyncio
@@ -48,7 +50,7 @@ async def test_drova_session_transition(mocker, fake_protector):
 
     mocker.patch("drova_desktop_keenetic.common.drova_session_transition.make_patchers", return_value=patchers)
 
-    session_manager = DrovaSessionTransition(None, fake_protector)
+    session_manager = DrovaSessionTransition(None, fake_protector, Config())
     await session_manager.set_status(StatusEnum.NEW, ctx)
 
     for patch in patchers:
@@ -95,7 +97,7 @@ async def test_drova_session_transition_active_from_aborted(mocker, fake_protect
 
     mocker.patch("drova_desktop_keenetic.common.drova_session_transition.make_patchers", return_value=patchers)
 
-    session_manager = DrovaSessionTransition(StatusEnum.ACTIVE, fake_protector)
+    session_manager = DrovaSessionTransition(StatusEnum.ACTIVE, fake_protector, Config())
     await session_manager.set_status(StatusEnum.HANDSHAKE, ctx)
 
     for patch in patchers:
@@ -124,7 +126,7 @@ async def test_drova_session_transition_active(mocker, fake_protector):
 
     mocker.patch("drova_desktop_keenetic.common.drova_session_transition.make_patchers", return_value=patchers)
 
-    session_manager = DrovaSessionTransition(StatusEnum.ACTIVE, fake_protector)
+    session_manager = DrovaSessionTransition(StatusEnum.ACTIVE, fake_protector, Config())
     await session_manager.set_status(None, ctx)
 
     for patch in patchers:

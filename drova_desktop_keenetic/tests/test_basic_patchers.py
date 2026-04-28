@@ -6,7 +6,7 @@ from drova_desktop_keenetic.common.patch import _ALL_PATCHES, ISessionHandler, p
 def test_registered():
 
     @patcher
-    class SimplePath(ISessionHandler):  # pylint: disable=W0612
+    class SimplePatch(ISessionHandler):  # pylint: disable=W0612
         async def on_idle(self, ctx):
             return await super().on_idle(ctx)
 
