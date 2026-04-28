@@ -58,7 +58,7 @@ class DrovaService:
     URL_SESSIONS = "{host}/session-manager/sessions?"
     URL_PRODUCT = "{host}/server-manager/product/get/{product_id}"
 
-    def __init__(self, host: str = "https://services.drova.io"):
+    def __init__(self, host: str):
         self._host: str = host
 
     async def get_latest_session(self, server_id: str, auth_token: str) -> SessionsEntity | None:
@@ -98,6 +98,9 @@ class DrovaService:
 class FakeDrova:
     def __init__(self):
         app = web.Application()
+        app.router.add_get("/set_desktop_new", self._set_desktop_new)
+        app.router.add_get("/set_session_active", self._set_session_active)
+        app.router.add_get("/set_session_finished", self._set_session_finished)
         app.router.add_get("/session-manager/sessions", self._get_session)
         app.router.add_get("/server-manager/product/get/{product_id}", self._get_product)
 
@@ -105,7 +108,7 @@ class FakeDrova:
         self._port = 8000
         self._host = "127.0.0.1"
 
-        self._runner: web.AppRunner | None = None
+        self._runner = web.AppRunner(self.app)
         self._site: web.BaseSite | None = None
 
         self.session = SessionsResponse(
@@ -115,7 +118,7 @@ class FakeDrova:
                     product_id=PRODUCT_UUID_BG3,
                     client_id=CLIENT_UUID_FAKE,
                     created_on=datetime.now(),
-                    status=StatusEnum.NEW,
+                    status=StatusEnum.FINISHED,
                     creator_ip=IPv4Address("127.0.0.1"),
                 )
             ]
@@ -127,7 +130,6 @@ class FakeDrova:
         return f"http://{self._host}:{self._port}"
 
     async def start(self):
-        self._runner = web.AppRunner(self.app)
         await self._runner.setup()
         self._site = web.TCPSite(self._runner, self._host, self._port)
         await self._site.start()
@@ -136,7 +138,6 @@ class FakeDrova:
         assert self._runner
         await self._runner.cleanup()
         self._site = None
-        self._runner = None
 
     async def _get_session(self, _: web.Request):
         if self.session:
@@ -146,3 +147,21 @@ class FakeDrova:
 
     async def _get_product(self, _: web.Request):
         return web.json_response(self.product.model_dump(mode="json"))
+
+    async def _set_desktop_new(self, _: web.Request):
+        assert self.session.sessions
+        self.session.sessions[0].product_id = PRODUCT_UUID_DESKTOP
+        self.session.sessions[0].status = StatusEnum.NEW
+        self.product.product_id = PRODUCT_UUID_BG3
+        self.product.use_default_desktop = True
+        return web.json_response("Ok")
+
+    async def _set_session_active(self, _: web.Request):
+        assert self.session.sessions
+        self.session.sessions[0].status = StatusEnum.ACTIVE
+        return web.json_response("Ok")
+
+    async def _set_session_finished(self, _: web.Request):
+        assert self.session.sessions
+        self.session.sessions[0].status = StatusEnum.FINISHED
+        return web.json_response("Ok")

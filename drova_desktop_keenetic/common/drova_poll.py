@@ -23,6 +23,7 @@ from drova_desktop_keenetic.common.drova_session_transition import (
 )
 from drova_desktop_keenetic.common.helpers import (
     RebootRequired,
+    to_str,
 )
 
 
@@ -35,9 +36,9 @@ class DrovaPoll:
         self.dict_store: OrderedDict[str, str] = ExpiringDict(max_len=100, max_age_seconds=60)
         self._dict_store_lock = asyncio.Lock()
 
-        self.drova_service = DrovaService()
+        self.drova_service = DrovaService(host=config.drova_service_host)
         self.ctx = SessionHandlerContext(config=config, ssh=None, sftp=None)
-        self.drova_transition = DrovaSessionTransition(None, ShadowDefender())
+        self.drova_transition = DrovaSessionTransition(None, ShadowDefender(config), config)
 
     async def get_auth_token(self) -> str:
         async with self._dict_store_lock:
@@ -57,14 +58,12 @@ class DrovaPoll:
             raise RebootRequired()
 
         complete_process = await self.ctx.ssh.run(str(RegQueryEsme()))
-        stdout = b""
+        stdout = to_str(complete_process.stdout, "windows-1251")
 
         if complete_process.exit_status or complete_process.returncode:
             raise RebootRequired()
 
         try:
-            if isinstance(complete_process.stdout, str):
-                stdout = complete_process.stdout.encode()
             self.dict_store["server_id"], self.dict_store["auth_token"] = RegQueryEsme.parse_auth_code(stdout=stdout)
         except NotFoundAuthCode as exc:
             raise RebootRequired from exc
