@@ -37,7 +37,6 @@ class ISessionHandler(ABC):
 
 
 class IPatch(ISessionHandler):
-    NAME: str
     TASKKILL_IMAGE: str
 
     remote_file_location: PureWindowsPath
@@ -63,10 +62,10 @@ class IPatch(ISessionHandler):
             await ctx.ssh.run(str(TaskKill(image=self.TASKKILL_IMAGE)))
         try:
             return await self.patch(ctx)
-        except SFTPNoSuchFile:
-            logger.warning(f"Not found file to patch {self.NAME}: {self.remote_file_location}")
+        except SFTPNoSuchFile as e:
+            logger.exception(f"Not found file to patch {self.__class__.__name__}: {self.remote_file_location} {e}")
         except Exception:  # pylint: disable=W0718
-            logger.exception(f"Error on apply patcher {self.NAME}")
+            logger.exception(f"Error on apply patcher {self.__class__.__name__}")
 
     async def on_session_active(self, ctx: SessionHandlerContext):
         pass
