@@ -1,3 +1,4 @@
+import json
 import logging
 from asyncio import create_task, sleep, wait
 from configparser import ConfigParser
@@ -26,7 +27,6 @@ logger = logging.getLogger(__name__)
 @patcher
 class EpicGamesAuthDiscard(IPatch):
     logger = logger.getChild("EpicGamesAuthDiscard")
-    NAME = "epicgames"
     TASKKILL_IMAGE = "EpicGamesLauncher.exe"
 
     remote_file_location = PureWindowsPath(
@@ -43,17 +43,14 @@ class EpicGamesAuthDiscard(IPatch):
         config.remove_section("RememberMe")
         config.remove_section("Offline")
         self.logger.info("Write without auth section")
+
         with open(file, "w", encoding="utf8") as f:
             config.write(f)
-        for file_dat in await ctx.sftp.glob(self.remote_file_location.parent / "*.dat"):
-            self.logger.info("Remove file %s", file_dat)
-            await ctx.sftp.remove(file_dat)
 
 
 @patcher
 class SteamAuthDiscard(IPatch):
     logger = logger.getChild("SteamAuthDiscard")
-    NAME = "steam"
     TASKKILL_IMAGE = "steam.exe"
     # remote_file_location = PureWindowsPath(r'c:\Program Files (x86)\Steam\config\config.vdf')
     remote_file_location = PureWindowsPath(r"c:\Program Files (x86)\Steam\config\loginusers.vdf")
@@ -70,7 +67,6 @@ class SteamAuthDiscard(IPatch):
 @patcher
 class UbisoftAuthDiscard(ISessionHandler):
     logger = logger.getChild("UbisoftAuthDiscard")
-    NAME = "ubisoft"
     TASKKILL_IMAGE = "upc.exe"
 
     to_remove = (
@@ -102,7 +98,6 @@ class UbisoftAuthDiscard(ISessionHandler):
 @patcher
 class WargamingAuthDiscard(ISessionHandler):
     logger = logger.getChild("WargamingAuthDiscard")
-    NAME = "wargaming"
     TASKKILL_IMAGE = "wgc.exe"
 
     to_remove = (r"AppData\Roaming\Wargaming.net\GameCenter\user_info.xml",)
@@ -126,6 +121,24 @@ class WargamingAuthDiscard(ISessionHandler):
 
     async def on_session_end(self, ctx: SessionHandlerContext):
         return None
+
+
+@patcher
+class BsgLauncher(IPatch):
+    TASKKILL_IMAGE = "BsgLauncher.exe"
+
+    remote_file_location = PureWindowsPath(r"AppData\Roaming\Battlestate Games\BsgLauncher\settings")
+
+    async def _patch(self, file: Path, ctx: SessionHandlerContext):
+        content = {}
+        with open(file=file, mode="r", encoding="utf-8") as f:
+            content = json.loads(f.read())
+            del content["login"]
+            del content["at"]
+            del content["atet"]
+            del content["rt"]
+        with open(file=file, mode="w", encoding="utf-8") as f:
+            f.write(json.dumps(content, indent=4))
 
 
 class RegistryPatch(BaseModel):

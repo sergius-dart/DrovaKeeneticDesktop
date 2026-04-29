@@ -10,7 +10,7 @@ sleep 30
 
 curl -v http://localhost:8000/set_session_active
 
-sleep 30
+read -p "Press enter to continue" test
 
 curl -v http://localhost:8000/set_session_finished
 
