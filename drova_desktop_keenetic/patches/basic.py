@@ -5,12 +5,14 @@ from configparser import ConfigParser
 from pathlib import Path, PureWindowsPath
 from typing import Generator
 
-from asyncssh import ChannelOpenError, ProcessError
+from asyncssh import ChannelOpenError, ProcessError, SFTPClient
 from pydantic import BaseModel
 
 from drova_desktop_keenetic.common.commands import (
     PsExec,
     RegAdd,
+    RegDel,
+    RegDelActionRemoveAllValues,
     RegValueType,
     TaskKill,
 )
@@ -139,6 +141,52 @@ class BsgLauncher(IPatch):
             del content["rt"]
         with open(file=file, mode="w", encoding="utf-8") as f:
             f.write(json.dumps(content, indent=4))
+
+
+@patcher
+class BattleNet(IPatch):
+    TASKKILL_IMAGE = "Battle.net.exe"
+
+    remote_file_location = PureWindowsPath(r"AppData\Roaming\Battle.net\Battle.net.config")
+
+    account_db_location = PureWindowsPath(r"AppData\Local\Battle.net\Account")
+
+    reg_identity = r"HKEY_CURRENT_USER\SOFTWARE\Blizzard Entertainment\Battle.net\Identity"
+    unif_auth = r"HKEY_CURRENT_USER\SOFTWARE\Blizzard Entertainment\Battle.net\UnifiedAuth"
+    encrypt_key = r"HKEY_CURRENT_USER\SOFTWARE\Blizzard Entertainment\Battle.net\EncryptionKey"
+
+    async def _patch(self, file: Path, ctx: SessionHandlerContext):
+        assert ctx.ssh
+        assert ctx.sftp
+        content = {}
+        with open(file=file, mode="r", encoding="utf-8") as f:
+            content = json.loads(f.read())
+            del content["Client"]
+            # del content["Client"]["SavedAccountNames"]
+            # del content["Client"]["GaClientId"]
+        with open(file=file, mode="w", encoding="utf-8") as f:
+            f.write(json.dumps(content, indent=4))
+
+        await self._clear_directory(ctx.sftp, self.account_db_location)
+        await ctx.ssh.run(str(RegDel(key=self.reg_identity, action=RegDelActionRemoveAllValues())))
+        await ctx.ssh.run(str(RegDel(key=self.unif_auth, action=RegDelActionRemoveAllValues())))
+        await ctx.ssh.run(str(RegDel(key=self.encrypt_key, action=RegDelActionRemoveAllValues())))
+        # удалить "HKEY_CURRENT_USER\\SOFTWARE\\Blizzard Entertainment\\Battle.net\\Identity" + ещё пару ключей
+
+    async def _clear_directory(self, sftp: SFTPClient, path: PureWindowsPath):
+        try:
+            items = await sftp.listdir(path)
+            for item in items:
+                item_path = f"{path}/{item}"
+                try:
+                    # Probe delete as file
+                    await sftp.remove(item_path)
+                except Exception:  # pylint: disable=W0718
+                    # if not a file - remove all directory items and remove dir
+                    await self._clear_directory(sftp, PureWindowsPath(item_path))
+                    await sftp.rmdir(item_path)
+        except FileNotFoundError:
+            pass
 
 
 class RegistryPatch(BaseModel):
