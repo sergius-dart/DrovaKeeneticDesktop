@@ -199,6 +199,36 @@ class RegAdd(ICommandBuilder):
         return " ".join(args)
 
 
+class RegKeyAction(ICommandBuilder):  # pylint: disable=R0903
+    pass
+
+
+class RegDelActionRemoveValue(RegKeyAction):  # pylint: disable=R0903
+    value_name: str
+
+    def _build_command(self):
+        return f"/v {self.value_name}"
+
+
+class RegDelActionRemoveDefault(RegKeyAction):  # pylint: disable=R0903
+    def _build_command(self):
+        return "/ve"
+
+
+class RegDelActionRemoveAllValues(RegKeyAction):  # pylint: disable=R0903
+    def _build_command(self):
+        return "/va"
+
+
+@dataclass
+class RegDel(ICommandBuilder):
+    key: str
+    action: RegKeyAction
+
+    def _build_command(self):
+        return " ".join(("reg", "delete", quote(self.key), "/f", str(self.action)))
+
+
 @dataclass
 class WmicGetLocalDrives(ICommandBuilder):
     def _build_command(self):
