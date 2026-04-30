@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from abc import ABC, abstractmethod
 from pathlib import Path, PureWindowsPath
@@ -60,6 +61,7 @@ class IPatch(ISessionHandler):
         assert ctx.ssh
         if self.TASKKILL_IMAGE:
             await ctx.ssh.run(str(TaskKill(image=self.TASKKILL_IMAGE)))
+            await asyncio.sleep(0.5)  # wait killed
         try:
             return await self.patch(ctx)
         except SFTPNoSuchFile as e:
