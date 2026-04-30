@@ -1,3 +1,4 @@
+import asyncio
 import json
 import logging
 from asyncio import create_task, sleep, wait
@@ -24,6 +25,22 @@ from drova_desktop_keenetic.common.patch import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+async def _clear_directory(sftp: SFTPClient, path: PureWindowsPath):
+    try:
+        items = await sftp.listdir(path)
+        for item in items:
+            item_path = f"{path}/{item}"
+            try:
+                # Probe delete as file
+                await sftp.remove(item_path)
+            except Exception:  # pylint: disable=W0718
+                # if not a file - remove all directory items and remove dir
+                await _clear_directory(sftp, PureWindowsPath(item_path))
+                await sftp.rmdir(item_path)
+    except FileNotFoundError:
+        pass
 
 
 @patcher
@@ -167,26 +184,35 @@ class BattleNet(IPatch):
         with open(file=file, mode="w", encoding="utf-8") as f:
             f.write(json.dumps(content, indent=4))
 
-        await self._clear_directory(ctx.sftp, self.account_db_location)
+        await _clear_directory(ctx.sftp, self.account_db_location)
         await ctx.ssh.run(str(RegDel(key=self.reg_identity, action=RegDelActionRemoveAllValues())))
         await ctx.ssh.run(str(RegDel(key=self.unif_auth, action=RegDelActionRemoveAllValues())))
         await ctx.ssh.run(str(RegDel(key=self.encrypt_key, action=RegDelActionRemoveAllValues())))
         # удалить "HKEY_CURRENT_USER\\SOFTWARE\\Blizzard Entertainment\\Battle.net\\Identity" + ещё пару ключей
 
-    async def _clear_directory(self, sftp: SFTPClient, path: PureWindowsPath):
-        try:
-            items = await sftp.listdir(path)
-            for item in items:
-                item_path = f"{path}/{item}"
-                try:
-                    # Probe delete as file
-                    await sftp.remove(item_path)
-                except Exception:  # pylint: disable=W0718
-                    # if not a file - remove all directory items and remove dir
-                    await self._clear_directory(sftp, PureWindowsPath(item_path))
-                    await sftp.rmdir(item_path)
-        except FileNotFoundError:
-            pass
+
+@patcher
+class Grypholink(ISessionHandler):
+    TASKKILL_IMAGE = "Games.exe"
+
+    remote_dir_clear = PureWindowsPath(r"AppData\LocalLow\Gryphline\Endfield")
+
+    async def on_idle(self, ctx: SessionHandlerContext):
+        pass
+
+    async def on_session_start(self, ctx: SessionHandlerContext):
+        assert ctx.ssh
+        assert ctx.sftp
+        if self.TASKKILL_IMAGE:
+            await ctx.ssh.run(str(TaskKill(image=self.TASKKILL_IMAGE)))
+            await asyncio.sleep(0.5)  # wait exit launcher
+        await _clear_directory(ctx.sftp, self.remote_dir_clear)
+
+    async def on_session_active(self, ctx: SessionHandlerContext):
+        pass
+
+    async def on_session_end(self, ctx: SessionHandlerContext):
+        pass
 
 
 class RegistryPatch(BaseModel):
