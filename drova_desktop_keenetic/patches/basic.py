@@ -215,6 +215,30 @@ class Grypholink(ISessionHandler):
         pass
 
 
+@patcher
+class EA(ISessionHandler):
+    TASKKILL_IMAGE = "EADesktop.exe"
+
+    remote_dir_clear = PureWindowsPath(r"AppData\Local\Electronic Arts\EA Desktop")
+
+    async def on_idle(self, ctx: SessionHandlerContext):
+        pass
+
+    async def on_session_start(self, ctx: SessionHandlerContext):
+        assert ctx.ssh
+        assert ctx.sftp
+        if self.TASKKILL_IMAGE:
+            await ctx.ssh.run(str(TaskKill(image=self.TASKKILL_IMAGE)))
+            await asyncio.sleep(0.1)  # wait exit launcher
+        await _clear_directory(ctx.sftp, self.remote_dir_clear)
+
+    async def on_session_active(self, ctx: SessionHandlerContext):
+        pass
+
+    async def on_session_end(self, ctx: SessionHandlerContext):
+        pass
+
+
 class RegistryPatch(BaseModel):
     reg_directory: str
     value_name: str
