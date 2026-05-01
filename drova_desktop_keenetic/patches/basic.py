@@ -239,7 +239,7 @@ class Lesta(ISessionHandler):
         if self.TASKKILL_IMAGE:
             await ctx.ssh.run(str(TaskKill(image=self.TASKKILL_IMAGE)))
             await asyncio.sleep(0.1)  # wait exit launcher
-        await _clear_directory(ctx.sftp, self.remote_dir_clear)
+        await ctx.ssh.run(RmDir(dir=self.remote_dir_clear))
 
     async def on_session_active(self, ctx: SessionHandlerContext):
         pass
