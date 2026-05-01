@@ -6,7 +6,7 @@ from configparser import ConfigParser
 from pathlib import Path, PureWindowsPath
 from typing import Generator
 
-from asyncssh import ChannelOpenError, ProcessError, SFTPClient
+from asyncssh import ChannelOpenError, ProcessError
 from pydantic import BaseModel
 
 from drova_desktop_keenetic.common.commands import (
@@ -15,6 +15,7 @@ from drova_desktop_keenetic.common.commands import (
     RegDel,
     RegDelActionRemoveAllValues,
     RegValueType,
+    RmDir,
     TaskKill,
 )
 from drova_desktop_keenetic.common.patch import (
@@ -25,22 +26,6 @@ from drova_desktop_keenetic.common.patch import (
 )
 
 logger = logging.getLogger(__name__)
-
-
-async def _clear_directory(sftp: SFTPClient, path: PureWindowsPath):
-    try:
-        items = await sftp.listdir(path)
-        for item in items:
-            item_path = f"{path}/{item}"
-            try:
-                # Probe delete as file
-                await sftp.remove(item_path)
-            except Exception:  # pylint: disable=W0718
-                # if not a file - remove all directory items and remove dir
-                await _clear_directory(sftp, PureWindowsPath(item_path))
-                await sftp.rmdir(item_path)
-    except FileNotFoundError:
-        pass
 
 
 @patcher
@@ -184,7 +169,7 @@ class BattleNet(IPatch):
         with open(file=file, mode="w", encoding="utf-8") as f:
             f.write(json.dumps(content, indent=4))
 
-        await _clear_directory(ctx.sftp, self.account_db_location)
+        await ctx.ssh.run(RmDir(dir=self.account_db_location))
         await ctx.ssh.run(str(RegDel(key=self.reg_identity, action=RegDelActionRemoveAllValues())))
         await ctx.ssh.run(str(RegDel(key=self.unif_auth, action=RegDelActionRemoveAllValues())))
         await ctx.ssh.run(str(RegDel(key=self.encrypt_key, action=RegDelActionRemoveAllValues())))
@@ -206,7 +191,7 @@ class Grypholink(ISessionHandler):
         if self.TASKKILL_IMAGE:
             await ctx.ssh.run(str(TaskKill(image=self.TASKKILL_IMAGE)))
             await asyncio.sleep(0.1)  # wait exit launcher
-        await _clear_directory(ctx.sftp, self.remote_dir_clear)
+        await ctx.ssh.run(RmDir(dir=self.remote_dir_clear))
 
     async def on_session_active(self, ctx: SessionHandlerContext):
         pass
@@ -230,7 +215,7 @@ class EA(ISessionHandler):
         if self.TASKKILL_IMAGE:
             await ctx.ssh.run(str(TaskKill(image=self.TASKKILL_IMAGE)))
             await asyncio.sleep(0.1)  # wait exit launcher
-        await _clear_directory(ctx.sftp, self.remote_dir_clear)
+        await ctx.ssh.run(RmDir(dir=self.remote_dir_clear))
 
     async def on_session_active(self, ctx: SessionHandlerContext):
         pass

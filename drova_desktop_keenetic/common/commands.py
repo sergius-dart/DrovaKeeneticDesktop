@@ -234,6 +234,14 @@ class RegDel(ICommandBuilder):
 
 
 @dataclass
+class RmDir(ICommandBuilder):
+    dir: PureWindowsPath
+
+    def _build_command(self):
+        return " ".join(("rmdir", quote(str(self.dir))))
+
+
+@dataclass
 class WmicGetLocalDrives(ICommandBuilder):
     def _build_command(self):
         return "wmic logicaldisk where drivetype=3 get name"
