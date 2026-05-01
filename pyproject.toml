@@ -63,6 +63,7 @@ max-line-length = 120
 max-module-lines=2000
 max-statements=102
 min-public-methods=1
+max-locals = 20
 
 disable = [
     "C0114",  # Missing module docstring
