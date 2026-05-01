@@ -1,6 +1,7 @@
 import asyncio
 import logging
 from abc import ABC, abstractmethod
+from operator import attrgetter
 from pathlib import Path, PureWindowsPath
 from typing import Any
 
@@ -17,6 +18,8 @@ logger = logging.getLogger(__name__)
 
 
 class ISessionHandler(ABC):
+    PRIORITY = 50  # set more if need call AFTER all
+
     def __init__(self, config: Config):  # pylint: disable=W0613
         return
 
@@ -61,7 +64,7 @@ class IPatch(ISessionHandler):
         assert ctx.ssh
         if self.TASKKILL_IMAGE:
             await ctx.ssh.run(str(TaskKill(image=self.TASKKILL_IMAGE)))
-            await asyncio.sleep(0.5)  # wait killed
+            await asyncio.sleep(0.1)  # wait killed
         try:
             return await self.patch(ctx)
         except SFTPNoSuchFile as e:
@@ -84,7 +87,7 @@ def patcher(cls: Any) -> type[ISessionHandler]:
 
 
 def make_patchers(config: Config) -> list[ISessionHandler]:
-    return [patcher(config=config) for patcher in _ALL_PATCHES]
+    return [patcher(config=config) for patcher in sorted(_ALL_PATCHES, key=attrgetter("PRIORITY"))]
 
 
 _ALL_PATCHES: list[type[ISessionHandler]] = []
