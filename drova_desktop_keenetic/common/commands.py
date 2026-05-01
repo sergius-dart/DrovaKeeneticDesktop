@@ -38,6 +38,7 @@ class PsExec(ICommandBuilder):
     detach: bool = True
     user: str = os.environ[WINDOWS_LOGIN]
     password: str = os.environ[WINDOWS_PASSWORD]
+    working_directory: PureWindowsPath | None = None
 
     def _build_command(self) -> str:
         command = ["psexec"]
@@ -56,6 +57,9 @@ class PsExec(ICommandBuilder):
 
         if self.password:
             command += ["-p", quote(self.password)]
+
+        if self.working_directory:
+            command += ["-w", quote(str(self.working_directory))]
 
         command += [str(self.command)]
         return " ".join(command)
@@ -274,6 +278,20 @@ class Shutdown(ICommandBuilder):
 class ObsStartStreaming(ICommandBuilder):
     OBS_PATH = PureWindowsPath(r"C:\Program Files\obs-studio\bin\64bit\obs64.exe")
     profile: str
+    collection: str
+    scene: str
 
     def _build_command(self):
-        return " ".join((str(self.OBS_PATH.name), "--profile", self.profile, "--startstreaming", "--minimize-to-tray"))
+        return " ".join(
+            (
+                quote(str(self.OBS_PATH)),
+                "--profile",
+                self.profile,
+                "--collection",
+                self.collection,
+                "--scene",
+                self.scene,
+                "--startstreaming",
+                "--minimize-to-tray",
+            )
+        )
