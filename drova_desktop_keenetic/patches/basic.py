@@ -169,7 +169,7 @@ class BattleNet(IPatch):
         with open(file=file, mode="w", encoding="utf-8") as f:
             f.write(json.dumps(content, indent=4))
 
-        await ctx.ssh.run(RmDir(dir=self.account_db_location))
+        await ctx.ssh.run(str(RmDir(dir=self.account_db_location)))
         await ctx.ssh.run(str(RegDel(key=self.reg_identity, action=RegDelActionRemoveAllValues())))
         await ctx.ssh.run(str(RegDel(key=self.unif_auth, action=RegDelActionRemoveAllValues())))
         await ctx.ssh.run(str(RegDel(key=self.encrypt_key, action=RegDelActionRemoveAllValues())))
@@ -191,7 +191,7 @@ class Grypholink(ISessionHandler):
         if self.TASKKILL_IMAGE:
             await ctx.ssh.run(str(TaskKill(image=self.TASKKILL_IMAGE)))
             await asyncio.sleep(0.1)  # wait exit launcher
-        await ctx.ssh.run(RmDir(dir=self.remote_dir_clear))
+        await ctx.ssh.run(str(RmDir(dir=self.remote_dir_clear)))
 
     async def on_session_active(self, ctx: SessionHandlerContext):
         pass
@@ -215,7 +215,7 @@ class EA(ISessionHandler):
         if self.TASKKILL_IMAGE:
             await ctx.ssh.run(str(TaskKill(image=self.TASKKILL_IMAGE)))
             await asyncio.sleep(0.1)  # wait exit launcher
-        await ctx.ssh.run(RmDir(dir=self.remote_dir_clear))
+        await ctx.ssh.run(str(RmDir(dir=self.remote_dir_clear)))
 
     async def on_session_active(self, ctx: SessionHandlerContext):
         pass
@@ -239,7 +239,7 @@ class Lesta(ISessionHandler):
         if self.TASKKILL_IMAGE:
             await ctx.ssh.run(str(TaskKill(image=self.TASKKILL_IMAGE)))
             await asyncio.sleep(0.1)  # wait exit launcher
-        await ctx.ssh.run(RmDir(dir=self.remote_dir_clear))
+        await ctx.ssh.run(str(RmDir(dir=self.remote_dir_clear)))
 
     async def on_session_active(self, ctx: SessionHandlerContext):
         pass
