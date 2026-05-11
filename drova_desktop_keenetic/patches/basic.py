@@ -248,6 +248,78 @@ class Lesta(ISessionHandler):
         pass
 
 
+@patcher
+class Edge(ISessionHandler):
+    TASKKILL_IMAGE = "msedge.exe"
+
+    remote_dir_clear = PureWindowsPath(r"AppData\Local\Microsoft\Edge\User Data")
+
+    async def on_idle(self, ctx: SessionHandlerContext):
+        pass
+
+    async def on_session_start(self, ctx: SessionHandlerContext):
+        assert ctx.ssh
+        assert ctx.sftp
+        if self.TASKKILL_IMAGE:
+            await ctx.ssh.run(str(TaskKill(image=self.TASKKILL_IMAGE)))
+            await asyncio.sleep(0.1)  # wait exit launcher
+        await ctx.ssh.run(str(RmDir(dir=self.remote_dir_clear)))
+
+    async def on_session_active(self, ctx: SessionHandlerContext):
+        pass
+
+    async def on_session_end(self, ctx: SessionHandlerContext):
+        pass
+
+
+@patcher
+class Firefox(ISessionHandler):
+    TASKKILL_IMAGE = "firefox.exe"
+
+    remote_dir_clear = PureWindowsPath(r"AppData\Local\Mozilla\Firefox\Profiles")
+
+    async def on_idle(self, ctx: SessionHandlerContext):
+        pass
+
+    async def on_session_start(self, ctx: SessionHandlerContext):
+        assert ctx.ssh
+        assert ctx.sftp
+        if self.TASKKILL_IMAGE:
+            await ctx.ssh.run(str(TaskKill(image=self.TASKKILL_IMAGE)))
+            await asyncio.sleep(0.1)  # wait exit launcher
+        await ctx.ssh.run(str(RmDir(dir=self.remote_dir_clear)))
+
+    async def on_session_active(self, ctx: SessionHandlerContext):
+        pass
+
+    async def on_session_end(self, ctx: SessionHandlerContext):
+        pass
+
+
+@patcher
+class Chrome(ISessionHandler):
+    TASKKILL_IMAGE = "chrome.exe"
+
+    remote_dir_clear = PureWindowsPath(r"AppData\Local\Google\Chrome\User Data")
+
+    async def on_idle(self, ctx: SessionHandlerContext):
+        pass
+
+    async def on_session_start(self, ctx: SessionHandlerContext):
+        assert ctx.ssh
+        assert ctx.sftp
+        if self.TASKKILL_IMAGE:
+            await ctx.ssh.run(str(TaskKill(image=self.TASKKILL_IMAGE)))
+            await asyncio.sleep(0.1)  # wait exit launcher
+        await ctx.ssh.run(str(RmDir(dir=self.remote_dir_clear)))
+
+    async def on_session_active(self, ctx: SessionHandlerContext):
+        pass
+
+    async def on_session_end(self, ctx: SessionHandlerContext):
+        pass
+
+
 class RegistryPatch(BaseModel):
     reg_directory: str
     value_name: str
