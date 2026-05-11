@@ -238,7 +238,7 @@ class RmDir(ICommandBuilder):
     dir: PureWindowsPath
 
     def _build_command(self):
-        return " ".join(("rmdir", quote(str(self.dir))))
+        return " ".join(("rmdir", "/S", "/Q", quote(str(self.dir))))
 
 
 @dataclass
