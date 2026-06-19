@@ -1,3 +1,5 @@
+[![Latest Release](https://img.shields.io/github/v/release/sergius-dart/DrovaKeeneticDesktop)](https://github.com/sergius-dart/DrovaKeeneticDesktop/releases/latest)
+
 # Drova Desktop
 
 И так, доброе время уток, мы здесь будем настраивать Drova Desktop для работы без наших аккаунтов. 
@@ -33,7 +35,7 @@
 
 ## Установка DrovaDesktop
 
-Надо скачать последний релиз - drovadesktop.exe - и установить. Вас спросят 
+Надо скачать последний релиз ( [![Latest Release](https://img.shields.io/github/v/release/sergius-dart/DrovaKeeneticDesktop)](https://github.com/sergius-dart/DrovaKeeneticDesktop/releases/latest) ) - drovadesktop.exe - и установить. Вас спросят 
 
 + пароль для Windows
 + SN для ShadowDefender(простите мне лень постоянно копировать его так что пользуйтесь)
