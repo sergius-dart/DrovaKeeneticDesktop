@@ -40,7 +40,7 @@ build-backend = "poetry.core.masonry.api"
 [tool.black]
 # https://black.readthedocs.io/en/stable/usage_and_configuration/the_basics.html#command-line-options
 line-length = 120
-target-version = ['py311']
+target-version = ['py311', 'py312', 'py313']
 
 [tool.pytest.ini_options]
 pythonpath = ["drova_desktop_keenetic"]
