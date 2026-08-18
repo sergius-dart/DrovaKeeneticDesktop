@@ -1,1 +1,1 @@
-from .fixtures.fake_drova import fake_drova  # pylint: disable=W0611
+from .fixtures.fake_drova import *  # pylint: disable=W0401,W0614

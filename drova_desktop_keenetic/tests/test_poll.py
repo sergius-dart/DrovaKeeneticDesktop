@@ -209,7 +209,7 @@ async def test_poll_active_to_none(fake_drova: FakeDrova):
     # no session - idle
     fake_drova.session = None
     await drova_poll.one_poll(ssh)
-    patcher.on_idle.assert_awaited_once()
+    patcher.on_idle.assert_not_awaited()
     patcher.on_session_start.assert_not_awaited()
     patcher.on_session_active.assert_awaited_once()
     patcher.on_session_end.assert_awaited_once()

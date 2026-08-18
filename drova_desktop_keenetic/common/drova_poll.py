@@ -38,7 +38,7 @@ class DrovaPoll:
 
         self.drova_service = DrovaService(host=config.drova_service_host)
         self.ctx = SessionHandlerContext(config=config, ssh=None, sftp=None)
-        self.drova_transition = DrovaSessionTransition(None, ShadowDefender(config), config)
+        self.drova_transition = DrovaSessionTransition(ShadowDefender(config), config)
 
     async def get_auth_token(self) -> str:
         async with self._dict_store_lock:
@@ -70,6 +70,7 @@ class DrovaPoll:
         return self.dict_store["server_id"], self.dict_store["auth_token"]
 
     async def one_poll(self, conn: SSHClientConnection) -> None:
+        self.ctx = self.ctx.model_copy()
         if self.ctx.ssh != conn:
             self.ctx.sftp = None
         self.ctx.ssh = conn
@@ -84,7 +85,9 @@ class DrovaPoll:
             await self.get_server_id(), await self.get_auth_token()
         )
         if not session:
-            await self.drova_transition.set_status(None, self.ctx)
+            self.ctx.session = None
+            self.ctx.product = None
+            await self.drova_transition.update_ctx(self.ctx)
             return
 
         product: ProductInfo = await self.drova_service.get_product_info(
@@ -95,7 +98,7 @@ class DrovaPoll:
         self.ctx.product = product
 
         if product.product_id == PRODUCT_UUID_DESKTOP or product.use_default_desktop:
-            await self.drova_transition.set_status(session.status, self.ctx)
+            await self.drova_transition.update_ctx(self.ctx)
 
     async def polling(self) -> None:
         while not self.stop_future.done():
@@ -117,9 +120,11 @@ class DrovaPoll:
                     except RebootRequired:
                         self.logger.info("Reboot required received!")
                         # simply finished/aborted not start reboot - need active->finished
-                        await self.drova_transition.set_status(StatusEnum.ACTIVE, self.ctx)
-                        await self.drova_transition.set_status(StatusEnum.ABORTED, self.ctx)
-                        await self.drova_transition.set_status(None, self.ctx)
+                        assert self.ctx.session
+                        self.ctx.session.status = StatusEnum.ACTIVE
+                        await self.drova_transition.update_ctx(self.ctx)
+                        self.ctx.session.status = StatusEnum.ABORTED
+                        await self.drova_transition.update_ctx(self.ctx)
                         # not return because tranition call reboot - and connection is closed automaticly
                         break
 
