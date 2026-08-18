@@ -1,5 +1,6 @@
 from logging import DEBUG, basicConfig
 from unittest.mock import AsyncMock
+from uuid import uuid5
 
 import pytest
 
@@ -34,9 +35,11 @@ def fake_protector():
 
 
 @pytest.mark.asyncio
-async def test_drova_session_transition(mocker, fake_protector):
+async def test_drova_session_transition(mocker, fake_protector, session_entity_desktop):
 
-    ctx = SessionHandlerContext(config=None, ssh=None, sftp=None)
+    ctx = SessionHandlerContext(config=None, ssh=None, sftp=None, session=session_entity_desktop(True))
+    ctx_next = ctx.model_copy()
+
     patchers = [
         AsyncMock(),
         AsyncMock(),
@@ -50,40 +53,46 @@ async def test_drova_session_transition(mocker, fake_protector):
 
     mocker.patch("drova_desktop_keenetic.common.drova_session_transition.make_patchers", return_value=patchers)
 
-    session_manager = DrovaSessionTransition(None, fake_protector, Config())
-    await session_manager.set_status(StatusEnum.NEW, ctx)
+    session_manager = DrovaSessionTransition(fake_protector, Config())
+    ctx.session.status = StatusEnum.NEW
+    await session_manager.update_ctx(ctx)
 
     for patch in patchers:
         patch.on_session_start.assert_awaited_once()
 
     # not call twice
-    await session_manager.set_status(StatusEnum.HANDSHAKE, ctx)
+    ctx_next.session.status = StatusEnum.HANDSHAKE
+    await session_manager.update_ctx(ctx_next)
 
     for patch in patchers:
         patch.on_session_start.assert_awaited_once()
 
     # go to active - call once
-    await session_manager.set_status(StatusEnum.ACTIVE, ctx)
+    ctx.session.status = StatusEnum.ACTIVE
+    await session_manager.update_ctx(ctx)
 
     for patch in patchers:
         patch.on_session_active.assert_awaited_once()
 
     # go to end - call once
-    await session_manager.set_status(StatusEnum.FINISHED, ctx)
+    ctx_next.session.status = StatusEnum.FINISHED
+    await session_manager.update_ctx(ctx_next)
 
     for patch in patchers:
         patch.on_session_end.assert_awaited_once()
 
     # not call twice
-    await session_manager.set_status(StatusEnum.ABORTED, ctx)
+    ctx.session.status = StatusEnum.ABORTED
+    await session_manager.update_ctx(ctx)
 
     for patch in patchers:
         patch.on_session_end.assert_awaited_once()
 
 
 @pytest.mark.asyncio
-async def test_drova_session_transition_active_from_aborted(mocker, fake_protector):
-    ctx = SessionHandlerContext(config=None, ssh=None, sftp=None)
+async def test_drova_session_transition_active_from_aborted(mocker, fake_protector, session_entity_desktop):
+    ctx = SessionHandlerContext(config=None, ssh=None, sftp=None, session=session_entity_desktop(True))
+    ctx_next = ctx.model_copy()
     patchers = [
         AsyncMock(),
         AsyncMock(),
@@ -97,22 +106,25 @@ async def test_drova_session_transition_active_from_aborted(mocker, fake_protect
 
     mocker.patch("drova_desktop_keenetic.common.drova_session_transition.make_patchers", return_value=patchers)
 
-    session_manager = DrovaSessionTransition(StatusEnum.ACTIVE, fake_protector, Config())
-    await session_manager.set_status(StatusEnum.HANDSHAKE, ctx)
+    session_manager = DrovaSessionTransition(fake_protector, Config())
+    ctx.session.status = StatusEnum.HANDSHAKE
+    await session_manager.update_ctx(ctx)
 
     for patch in patchers:
         patch.on_session_start.assert_awaited_once()
 
     # not call twice
-    await session_manager.set_status(StatusEnum.ABORTED, ctx)
+    ctx_next.session.status = StatusEnum.ABORTED
+    await session_manager.update_ctx(ctx_next)
 
     for patch in patchers:
         patch.on_session_end.assert_awaited_once()
 
 
 @pytest.mark.asyncio
-async def test_drova_session_transition_active(mocker, fake_protector):
-    ctx = SessionHandlerContext(config=None, ssh=None, sftp=None)
+async def test_drova_session_transition_active(mocker, fake_protector, session_entity_desktop):
+    ctx = SessionHandlerContext(config=None, ssh=None, sftp=None, session=session_entity_desktop(True))
+    ctx_next = ctx.model_copy()
     patchers = [
         AsyncMock(),
         AsyncMock(),
@@ -126,14 +138,55 @@ async def test_drova_session_transition_active(mocker, fake_protector):
 
     mocker.patch("drova_desktop_keenetic.common.drova_session_transition.make_patchers", return_value=patchers)
 
-    session_manager = DrovaSessionTransition(StatusEnum.ACTIVE, fake_protector, Config())
-    await session_manager.set_status(None, ctx)
+    session_manager = DrovaSessionTransition(fake_protector, Config())
+    session_manager._prev_ctx = ctx  # pylint: disable=W0212
+    ctx_next.session.status = StatusEnum.FINISHED
+    await session_manager.update_ctx(ctx_next)
 
     for patch in patchers:
         patch.on_session_end.assert_awaited_once()
 
     # not call twice
-    await session_manager.set_status(None, ctx)
+    ctx.session.status = StatusEnum.ACTIVE
+    await session_manager.update_ctx(ctx)
 
     for patch in patchers:
-        patch.on_idle.assert_awaited_once()
+        patch.on_session_start.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_drova_session_transition_active_active_another(
+    mocker, fake_protector, session_entity_desktop, session_entity_bg3
+):
+    ctx = SessionHandlerContext(config=None, ssh=None, sftp=None, session=session_entity_desktop(True))
+    ctx_next = SessionHandlerContext(config=None, ssh=None, sftp=None, session=session_entity_bg3(True))
+    patchers = [
+        AsyncMock(),
+        AsyncMock(),
+    ]
+
+    for p in patchers:
+        p.on_idle = AsyncMock()
+        p.on_session_start = AsyncMock()
+        p.on_session_active = AsyncMock()
+        p.on_session_end = AsyncMock()
+
+    mocker.patch("drova_desktop_keenetic.common.drova_session_transition.make_patchers", return_value=patchers)
+
+    session_manager = DrovaSessionTransition(fake_protector, Config())
+    ctx.session.status = StatusEnum.FINISHED
+    session_manager._prev_ctx = ctx  # pylint: disable=W0212
+    ctx_next.session.status = StatusEnum.ACTIVE
+    await session_manager.update_ctx(ctx_next)
+
+    for patch in patchers:
+        patch.on_session_start.assert_awaited_once()
+
+    # not call twice
+    ctx.session.uuid = uuid5(ctx.session.uuid, "NEW_SESSION")
+    ctx.session.status = StatusEnum.ACTIVE
+    await session_manager.update_ctx(ctx)
+
+    for patch in patchers:
+        patch.on_session_start.assert_awaited_once()
+        patch.on_session_end.assert_awaited_once()
